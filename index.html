@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haven Energy — Growth Marketing Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --surface: #111827;
+    --surface-raised: #1a2237;
+    --border: #1e293b;
+    --border-light: #2d3a50;
+    --text: #e2e8f0;
+    --text-muted: #8896ab;
+    --text-dim: #5a6a80;
+    --accent-green: #34d399;
+    --accent-green-dim: rgba(52, 211, 153, 0.12);
+    --accent-blue: #60a5fa;
+    --accent-blue-dim: rgba(96, 165, 250, 0.12);
+    --accent-amber: #fbbf24;
+    --accent-amber-dim: rgba(251, 191, 36, 0.12);
+    --accent-purple: #a78bfa;
+    --accent-purple-dim: rgba(167, 139, 250, 0.12);
+    --accent-rose: #fb7185;
+    --accent-rose-dim: rgba(251, 113, 133, 0.12);
+    --haven-orange: #f97316;
+    --haven-orange-dim: rgba(249, 115, 22, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--haven-orange), #ea580c);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .header-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .header-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .last-sync {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .sync-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    background: var(--surface-raised);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sync-btn:hover { background: var(--border); border-color: var(--text-dim); }
+  .sync-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .sync-btn .spinner { display: none; animation: spin 1s linear infinite; }
+  .sync-btn.syncing .spinner { display: inline-block; }
+  .sync-btn.syncing .sync-icon { display: none; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Controls Bar ── */
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .view-toggle {
+    display: flex;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 3px;
+    border: 1px solid var(--border);
+  }
+
+  .view-toggle button {
+    padding: 7px 18px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .view-toggle button.active {
+    background: var(--haven-orange);
+    color: white;
+  }
+
+  .date-range-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface-raised);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover { background: var(--border); color: var(--text); }
+
+  .date-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    min-width: 180px;
+    text-align: center;
+  }
+
+  /* ── KPI Cards ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 24px 32px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .kpi-card:hover { border-color: var(--border-light); }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .kpi-card.mql::before { background: var(--accent-blue); }
+  .kpi-card.sql::before { background: var(--accent-purple); }
+  .kpi-card.meetings::before { background: var(--accent-amber); }
+  .kpi-card.completed::before { background: var(--accent-green); }
+
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 8px;
+  }
+
+  .kpi-card.mql .kpi-label { color: var(--accent-blue); }
+  .kpi-card.sql .kpi-label { color: var(--accent-purple); }
+  .kpi-card.meetings .kpi-label { color: var(--accent-amber); }
+  .kpi-card.completed .kpi-label { color: var(--accent-green); }
+
+  .kpi-value {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 8px;
+    letter-spacing: -2px;
+  }
+
+  .kpi-change {
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .kpi-change.up { color: var(--accent-green); }
+  .kpi-change.down { color: var(--accent-rose); }
+  .kpi-change.neutral { color: var(--text-dim); }
+
+  /* ── Charts Area ── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    padding: 0 32px 24px;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .chart-subtitle {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 20px;
+  }
+
+  .chart-container {
+    position: relative;
+    height: 280px;
+  }
+
+  /* ── Conversion Funnel ── */
+  .funnel-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .funnel-step {
+    position: relative;
+  }
+
+  .funnel-bar-bg {
+    width: 100%;
+    height: 48px;
+    border-radius: 8px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  .funnel-bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    min-width: 60px;
+  }
+
+  .funnel-bar-fill.mql { background: var(--accent-blue-dim); border: 1px solid rgba(96, 165, 250, 0.25); }
+  .funnel-bar-fill.sql { background: var(--accent-purple-dim); border: 1px solid rgba(167, 139, 250, 0.25); }
+  .funnel-bar-fill.meetings { background: var(--accent-amber-dim); border: 1px solid rgba(251, 191, 36, 0.25); }
+  .funnel-bar-fill.completed { background: var(--accent-green-dim); border: 1px solid rgba(52, 211, 153, 0.25); }
+
+  .funnel-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .funnel-count {
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    margin-left: auto;
+  }
+
+  .funnel-rate {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-family: 'Space Mono', monospace;
+    text-align: right;
+  }
+
+  /* ── Table Section ── */
+  .table-section {
+    padding: 0 32px 32px;
+  }
+
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-raised);
+    position: sticky;
+    top: 0;
+  }
+
+  thead th.num { text-align: right; }
+
+  tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  tbody td.num {
+    text-align: right;
+    font-family: 'Space Mono', monospace;
+    font-weight: 600;
+  }
+
+  tbody tr:hover { background: var(--surface-raised); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .period-label {
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .bar-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mini-bar {
+    height: 6px;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  .mini-bar.mql { background: var(--accent-blue); }
+  .mini-bar.sql { background: var(--accent-purple); }
+  .mini-bar.meetings { background: var(--accent-amber); }
+  .mini-bar.completed { background: var(--accent-green); }
+
+  /* ── Loading / Empty States ── */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    transition: opacity 0.4s;
+  }
+
+  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+  .loader {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--haven-orange);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+  }
+
+  .loading-text {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+  }
+
+  .empty-state h3 {
+    font-size: 18px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .header, .controls, .kpi-grid, .charts-grid, .table-section { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loader"></div>
+  <div class="loading-text">Loading growth data...</div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">H</div>
+    <div>
+      <div class="header-title">Haven Energy</div>
+      <div class="header-subtitle">Growth Marketing Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="last-sync" id="lastSync">—</div>
+    <button class="sync-btn" id="syncBtn" onclick="syncHubSpot()">
+      <span class="sync-icon">⟳</span>
+      <span class="spinner">⟳</span>
+      Sync HubSpot
+    </button>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <div class="view-toggle">
+    <button class="active" data-view="weekly" onclick="setView('weekly')">Weekly</button>
+    <button data-view="monthly" onclick="setView('monthly')">Monthly</button>
+  </div>
+  <div class="date-range-controls">
+    <button class="nav-btn" onclick="navigate(-1)">‹</button>
+    <div class="date-label" id="dateLabel">—</div>
+    <button class="nav-btn" onclick="navigate(1)">›</button>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card mql">
+    <div class="kpi-label">MQLs</div>
+    <div class="kpi-value" id="kpiMql">—</div>
+    <div class="kpi-change neutral" id="kpiMqlChange">—</div>
+  </div>
+  <div class="kpi-card sql">
+    <div class="kpi-label">SQLs</div>
+    <div class="kpi-value" id="kpiSql">—</div>
+    <div class="kpi-change neutral" id="kpiSqlChange">—</div>
+  </div>
+  <div class="kpi-card meetings">
+    <div class="kpi-label">Meetings</div>
+    <div class="kpi-value" id="kpiMeetings">—</div>
+    <div class="kpi-change neutral" id="kpiMeetingsChange">—</div>
+  </div>
+  <div class="kpi-card completed">
+    <div class="kpi-label">Completed Meetings</div>
+    <div class="kpi-value" id="kpiCompleted">—</div>
+    <div class="kpi-change neutral" id="kpiCompletedChange">—</div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="charts-grid">
+  <div class="chart-card">
+    <div class="chart-title">Trend</div>
+    <div class="chart-subtitle" id="trendSubtitle">WEEKLY BREAKDOWN</div>
+    <div class="chart-container">
+      <canvas id="trendChart"></canvas>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Funnel — Current Period</div>
+    <div class="chart-subtitle" id="funnelSubtitle">CONVERSION RATES</div>
+    <div class="funnel-container" id="funnelContainer"></div>
+  </div>
+</div>
+
+<!-- Breakdown Table -->
+<div class="table-section">
+  <div class="table-header">
+    <div class="chart-title" id="tableTitle">Weekly Breakdown</div>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Period</th>
+          <th class="num">MQLs</th>
+          <th></th>
+          <th class="num">SQLs</th>
+          <th></th>
+          <th class="num">Meetings</th>
+          <th></th>
+          <th class="num">Completed</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ── Config ──
+const CONFIG = {
+  SUPABASE_URL: 'https://vnxerxefgodekwjdxfqc.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_BjuP0L7Bw2_903MXWqf6Ag_c5QOuB3r',
+};
+
+const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+// ── State ──
+let currentView = 'weekly'; // 'weekly' | 'monthly'
+let currentOffset = 0; // 0 = current period, -1 = previous, etc.
+let allContacts = [];
+let allMeetings = [];
+let trendChart = null;
+
+// ── Init ──
+async function init() {
+  try {
+    await loadData();
+    render();
+    loadLastSync();
+  } catch (err) {
+    console.error('Init error:', err);
+  } finally {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  }
+}
+
+async function loadData() {
+  const [contactsRes, meetingsRes] = await Promise.all([
+    supabase.from('growth_contacts').select('*'),
+    supabase.from('growth_meetings').select('*')
+  ]);
+
+  if (contactsRes.error) throw contactsRes.error;
+  if (meetingsRes.error) throw meetingsRes.error;
+
+  allContacts = contactsRes.data || [];
+  allMeetings = meetingsRes.data || [];
+}
+
+async function loadLastSync() {
+  const { data } = await supabase
+    .from('growth_sync_log')
+    .select('synced_at')
+    .order('synced_at', { ascending: false })
+    .limit(1);
+
+  if (data && data.length > 0) {
+    const d = new Date(data[0].synced_at);
+    document.getElementById('lastSync').textContent = `Last sync: ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+}
+
+// ── Sync ──
+async function syncHubSpot() {
+  const btn = document.getElementById('syncBtn');
+  btn.classList.add('syncing');
+  btn.disabled = true;
+
+  try {
+    const response = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/sync-growth-marketing`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      alert(`Synced ${result.contacts_synced} contacts and ${result.meetings_synced} meetings`);
+      await loadData();
+      render();
+      loadLastSync();
+    } else {
+      alert('Sync error: ' + (result.error || 'Unknown error'));
+    }
+  } catch (err) {
+    alert('Sync failed: ' + err.message);
+  } finally {
+    btn.classList.remove('syncing');
+    btn.disabled = false;
+  }
+}
+
+// ── Date Helpers ──
+function getWeekStart(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function getWeekEnd(weekStart) {
+  const d = new Date(weekStart);
+  d.setDate(d.getDate() + 6);
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
+
+function getMonthStart(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function getMonthEnd(date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+}
+
+function getCurrentPeriod() {
+  const now = new Date();
+  if (currentView === 'weekly') {
+    const start = getWeekStart(now);
+    start.setDate(start.getDate() + currentOffset * 7);
+    return { start, end: getWeekEnd(start) };
+  } else {
+    const start = getMonthStart(now);
+    start.setMonth(start.getMonth() + currentOffset);
+    return { start, end: getMonthEnd(start) };
+  }
+}
+
+function getPreviousPeriod() {
+  const now = new Date();
+  if (currentView === 'weekly') {
+    const start = getWeekStart(now);
+    start.setDate(start.getDate() + (currentOffset - 1) * 7);
+    return { start, end: getWeekEnd(start) };
+  } else {
+    const start = getMonthStart(now);
+    start.setMonth(start.getMonth() + currentOffset - 1);
+    return { start, end: getMonthEnd(start) };
+  }
+}
+
+function formatPeriodLabel(period) {
+  const opts = { month: 'short', day: 'numeric' };
+  if (currentView === 'weekly') {
+    return `${period.start.toLocaleDateString('en-US', opts)} — ${period.end.toLocaleDateString('en-US', opts)}, ${period.end.getFullYear()}`;
+  } else {
+    return period.start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+}
+
+function formatShortPeriod(start) {
+  if (currentView === 'weekly') {
+    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  } else {
+    return start.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+  }
+}
+
+// ── Metrics Calculation ──
+function getMetrics(start, end) {
+  const s = start.getTime();
+  const e = end.getTime();
+
+  const mqls = allContacts.filter(c => {
+    if (!c.mql_date) return false;
+    const d = new Date(c.mql_date).getTime();
+    return d >= s && d <= e;
+  }).length;
+
+  const sqls = allContacts.filter(c => {
+    if (!c.sql_date) return false;
+    const d = new Date(c.sql_date).getTime();
+    return d >= s && d <= e;
+  }).length;
+
+  const meetings = allMeetings.filter(m => {
+    if (!m.start_time) return false;
+    const d = new Date(m.start_time).getTime();
+    return d >= s && d <= e;
+  }).length;
+
+  const completedMeetings = allMeetings.filter(m => {
+    if (!m.start_time) return false;
+    const d = new Date(m.start_time).getTime();
+    const inRange = d >= s && d <= e;
+    const completed = m.outcome && (
+      m.outcome.toLowerCase() === 'completed' ||
+      m.outcome.toLowerCase() === 'scheduled' ||
+      m.outcome === 'COMPLETED'
+    );
+    return inRange && completed;
+  }).length;
+
+  return { mqls, sqls, meetings, completedMeetings };
+}
+
+function getTrendPeriods(count = 12) {
+  const periods = [];
+  for (let i = -(count - 1); i <= 0; i++) {
+    const offset = currentOffset + i;
+    const now = new Date();
+    let start, end;
+    if (currentView === 'weekly') {
+      start = getWeekStart(now);
+      start.setDate(start.getDate() + offset * 7);
+      end = getWeekEnd(start);
+    } else {
+      start = getMonthStart(now);
+      start.setMonth(start.getMonth() + offset);
+      end = getMonthEnd(start);
+    }
+    const metrics = getMetrics(start, end);
+    periods.push({ start, end, ...metrics });
+  }
+  return periods;
+}
+
+// ── Rendering ──
+function render() {
+  const period = getCurrentPeriod();
+  const prevPeriod = getPreviousPeriod();
+  const metrics = getMetrics(period.start, period.end);
+  const prevMetrics = getMetrics(prevPeriod.start, prevPeriod.end);
+
+  // Date label
+  document.getElementById('dateLabel').textContent = formatPeriodLabel(period);
+
+  // KPIs
+  renderKpi('kpiMql', 'kpiMqlChange', metrics.mqls, prevMetrics.mqls);
+  renderKpi('kpiSql', 'kpiSqlChange', metrics.sqls, prevMetrics.sqls);
+  renderKpi('kpiMeetings', 'kpiMeetingsChange', metrics.meetings, prevMetrics.meetings);
+  renderKpi('kpiCompleted', 'kpiCompletedChange', metrics.completedMeetings, prevMetrics.completedMeetings);
+
+  // Subtitles
+  const viewLabel = currentView === 'weekly' ? 'WEEKLY' : 'MONTHLY';
+  document.getElementById('trendSubtitle').textContent = `${viewLabel} BREAKDOWN`;
+  document.getElementById('funnelSubtitle').textContent = formatPeriodLabel(period);
+  document.getElementById('tableTitle').textContent = `${currentView === 'weekly' ? 'Weekly' : 'Monthly'} Breakdown`;
+
+  // Chart
+  renderTrendChart();
+
+  // Funnel
+  renderFunnel(metrics);
+
+  // Table
+  renderTable();
+}
+
+function renderKpi(valueId, changeId, current, previous) {
+  document.getElementById(valueId).textContent = current;
+
+  const changeEl = document.getElementById(changeId);
+  if (previous === 0 && current === 0) {
+    changeEl.textContent = 'No change';
+    changeEl.className = 'kpi-change neutral';
+  } else if (previous === 0) {
+    changeEl.innerHTML = `↑ New`;
+    changeEl.className = 'kpi-change up';
+  } else {
+    const pct = Math.round(((current - previous) / previous) * 100);
+    const arrow = pct > 0 ? '↑' : pct < 0 ? '↓' : '→';
+    changeEl.innerHTML = `${arrow} ${Math.abs(pct)}% vs prior ${currentView === 'weekly' ? 'week' : 'month'}`;
+    changeEl.className = `kpi-change ${pct > 0 ? 'up' : pct < 0 ? 'down' : 'neutral'}`;
+  }
+}
+
+function renderTrendChart() {
+  const periods = getTrendPeriods(currentView === 'weekly' ? 12 : 6);
+  const labels = periods.map(p => formatShortPeriod(p.start));
+
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: 'MQLs',
+        data: periods.map(p => p.mqls),
+        borderColor: 'rgba(96, 165, 250, 1)',
+        backgroundColor: 'rgba(96, 165, 250, 0.08)',
+        fill: true,
+        tension: 0.3,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: 'rgba(96, 165, 250, 1)',
+      },
+      {
+        label: 'SQLs',
+        data: periods.map(p => p.sqls),
+        borderColor: 'rgba(167, 139, 250, 1)',
+        backgroundColor: 'rgba(167, 139, 250, 0.08)',
+        fill: true,
+        tension: 0.3,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: 'rgba(167, 139, 250, 1)',
+      },
+      {
+        label: 'Meetings',
+        data: periods.map(p => p.meetings),
+        borderColor: 'rgba(251, 191, 36, 1)',
+        backgroundColor: 'rgba(251, 191, 36, 0.08)',
+        fill: true,
+        tension: 0.3,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: 'rgba(251, 191, 36, 1)',
+      },
+      {
+        label: 'Completed',
+        data: periods.map(p => p.completedMeetings),
+        borderColor: 'rgba(52, 211, 153, 1)',
+        backgroundColor: 'rgba(52, 211, 153, 0.08)',
+        fill: true,
+        tension: 0.3,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: 'rgba(52, 211, 153, 1)',
+      }
+    ]
+  };
+
+  if (trendChart) {
+    trendChart.data = chartData;
+    trendChart.update('none');
+  } else {
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    trendChart = new Chart(ctx, {
+      type: 'line',
+      data: chartData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            align: 'end',
+            labels: {
+              color: '#8896ab',
+              font: { family: 'DM Sans', size: 11 },
+              boxWidth: 12,
+              boxHeight: 3,
+              borderRadius: 2,
+              padding: 16,
+              usePointStyle: false,
+            }
+          },
+          tooltip: {
+            backgroundColor: '#1a2237',
+            titleColor: '#e2e8f0',
+            bodyColor: '#8896ab',
+            borderColor: '#2d3a50',
+            borderWidth: 1,
+            padding: 12,
+            cornerRadius: 8,
+            titleFont: { family: 'DM Sans', weight: '600' },
+            bodyFont: { family: 'Space Mono', size: 12 },
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(30, 41, 59, 0.5)', drawBorder: false },
+            ticks: { color: '#5a6a80', font: { family: 'Space Mono', size: 10 }, maxRotation: 45, minRotation: 0 },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(30, 41, 59, 0.5)', drawBorder: false },
+            ticks: { color: '#5a6a80', font: { family: 'Space Mono', size: 10 }, stepSize: 1, precision: 0 },
+          }
+        }
+      }
+    });
+  }
+}
+
+function renderFunnel(metrics) {
+  const container = document.getElementById('funnelContainer');
+  const maxVal = Math.max(metrics.mqls, metrics.sqls, metrics.meetings, metrics.completedMeetings, 1);
+
+  const steps = [
+    { label: 'MQLs', value: metrics.mqls, cls: 'mql', rate: null },
+    { label: 'SQLs', value: metrics.sqls, cls: 'sql', rate: metrics.mqls > 0 ? ((metrics.sqls / metrics.mqls) * 100).toFixed(0) + '% of MQLs' : '—' },
+    { label: 'Meetings', value: metrics.meetings, cls: 'meetings', rate: metrics.sqls > 0 ? ((metrics.meetings / metrics.sqls) * 100).toFixed(0) + '% of SQLs' : '—' },
+    { label: 'Completed', value: metrics.completedMeetings, cls: 'completed', rate: metrics.meetings > 0 ? ((metrics.completedMeetings / metrics.meetings) * 100).toFixed(0) + '% of Meetings' : '—' },
+  ];
+
+  container.innerHTML = steps.map(s => {
+    const pct = Math.max((s.value / maxVal) * 100, 15);
+    return `
+      <div class="funnel-step">
+        <div class="funnel-bar-bg">
+          <div class="funnel-bar-fill ${s.cls}" style="width: ${pct}%">
+            <span class="funnel-label">${s.label}</span>
+            <span class="funnel-count">${s.value}</span>
+          </div>
+        </div>
+        ${s.rate ? `<div class="funnel-rate">${s.rate}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderTable() {
+  const periods = getTrendPeriods(currentView === 'weekly' ? 12 : 6);
+  periods.reverse(); // most recent first
+  const tbody = document.getElementById('tableBody');
+  const maxMql = Math.max(...periods.map(p => p.mqls), 1);
+  const maxSql = Math.max(...periods.map(p => p.sqls), 1);
+  const maxMeet = Math.max(...periods.map(p => p.meetings), 1);
+  const maxComp = Math.max(...periods.map(p => p.completedMeetings), 1);
+
+  tbody.innerHTML = periods.map(p => {
+    const label = currentView === 'weekly'
+      ? `${p.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${p.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+      : p.start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    return `<tr>
+      <td class="period-label">${label}</td>
+      <td class="num">${p.mqls}</td>
+      <td><div class="bar-cell"><div class="mini-bar mql" style="width: ${(p.mqls / maxMql) * 80}px"></div></div></td>
+      <td class="num">${p.sqls}</td>
+      <td><div class="bar-cell"><div class="mini-bar sql" style="width: ${(p.sqls / maxSql) * 80}px"></div></div></td>
+      <td class="num">${p.meetings}</td>
+      <td><div class="bar-cell"><div class="mini-bar meetings" style="width: ${(p.meetings / maxMeet) * 80}px"></div></div></td>
+      <td class="num">${p.completedMeetings}</td>
+      <td><div class="bar-cell"><div class="mini-bar completed" style="width: ${(p.completedMeetings / maxComp) * 80}px"></div></div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Controls ──
+function setView(view) {
+  currentView = view;
+  currentOffset = 0;
+  document.querySelectorAll('.view-toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === view);
+  });
+  render();
+}
+
+function navigate(dir) {
+  currentOffset += dir;
+  if (currentOffset > 0) currentOffset = 0; // don't go into the future
+  render();
+}
+
+// ── Boot ──
+init();
+</script>
+</body>
+</html>
