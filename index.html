@@ -10,21 +10,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
 <style>
   :root {
-    --bg: #0a0f1a;
-    --surface: #111827;
-    --surface2: #1a2234;
-    --border: #1e2d44;
-    --text: #e2e8f0;
-    --text-dim: #8896aa;
-    --accent: #22d3a7;
-    --accent2: #3b82f6;
-    --accent3: #f59e0b;
-    --purple: #a855f7;
-    --pink: #ec4899;
-    --red: #ef4444;
-    --green: #22c55e;
-    --font: 'DM Sans', sans-serif;
-    --mono: 'Space Mono', monospace;
+    --bg: #0a0f1a; --surface: #111827; --surface2: #1a2234; --border: #1e2d44;
+    --text: #e2e8f0; --text-dim: #8896aa; --accent: #22d3a7; --accent2: #3b82f6;
+    --accent3: #f59e0b; --purple: #a855f7; --pink: #ec4899; --red: #ef4444; --green: #22c55e;
+    --font: 'DM Sans', sans-serif; --mono: 'Space Mono', monospace;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; }
@@ -33,6 +22,10 @@
   .topbar-left { display:flex; align-items:center; gap:16px; }
   .logo { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--accent); letter-spacing:2px; text-transform:uppercase; }
   .topbar-title { font-size:15px; font-weight:500; color:var(--text-dim); }
+  .topbar-right { display:flex; align-items:center; gap:12px; }
+  .sync-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text-dim); font-family:var(--font); font-size:13px; padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s; }
+  .sync-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .sync-btn.syncing { color:var(--accent); border-color:var(--accent); opacity:0.7; cursor:wait; }
   .sync-status { font-family:var(--mono); font-size:11px; color:var(--text-dim); }
 
   .controls { display:flex; align-items:center; justify-content:space-between; padding:20px 32px; gap:16px; flex-wrap:wrap; }
@@ -88,6 +81,16 @@
   .table-card tr:hover td { background:var(--surface2); }
   .mini-bar { display:inline-block; height:6px; border-radius:3px; margin-right:8px; vertical-align:middle; }
 
+  /* Sync overlay */
+  .sync-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(10,15,26,0.85); display:flex; align-items:center; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+  .sync-overlay.show { opacity:1; pointer-events:all; }
+  .sync-modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:32px 40px; max-width:420px; width:90%; text-align:center; }
+  .sync-modal h3 { font-size:16px; margin-bottom:16px; }
+  .sync-progress { font-family:var(--mono); font-size:13px; color:var(--accent); margin-bottom:8px; }
+  .sync-detail { font-size:12px; color:var(--text-dim); margin-bottom:16px; }
+  .sync-bar-track { height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+  .sync-bar-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.3s; }
+
   @media(max-width:1100px) { .kpi-grid{grid-template-columns:repeat(3,1fr);} .charts-row{grid-template-columns:1fr;} }
   @media(max-width:700px) { .kpi-grid{grid-template-columns:repeat(2,1fr);} .controls{flex-direction:column;align-items:flex-start;} .topbar,.main,.controls{padding-left:16px;padding-right:16px;} }
 </style>
@@ -99,7 +102,10 @@
     <div class="logo">Haven Energy</div>
     <div class="topbar-title">Growth Marketing</div>
   </div>
-  <span class="sync-status" id="syncStatus">Loading...</span>
+  <div class="topbar-right">
+    <button class="sync-btn" id="syncBtn" onclick="runSync()">⟳ Sync HubSpot</button>
+    <span class="sync-status" id="syncStatus">Loading...</span>
+  </div>
 </div>
 
 <div class="controls">
@@ -136,29 +142,34 @@
   </div>
 </div>
 
+<div class="sync-overlay" id="syncOverlay">
+  <div class="sync-modal">
+    <h3>Syncing HubSpot Data</h3>
+    <div class="sync-progress" id="syncProgress">Initializing...</div>
+    <div class="sync-detail" id="syncDetail">This may take a couple of minutes</div>
+    <div class="sync-bar-track"><div class="sync-bar-fill" id="syncBar" style="width:0%"></div></div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://vnxerxefgodekwjdxfqc.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZueGVyeGVmZ29kZWt3amR4ZnFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4MDMwMDIsImV4cCI6MjA1MjM3OTAwMn0.sb_publishable_BjuP0L7Bw2_903MXWqf6Ag_c5QOuB3r';
+const FUNC_URL = SUPABASE_URL + '/functions/v1/sync-growth-marketing';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const PARTNER_SOURCES = ['PCE','CPA','QCS','Self-Generated','CEA','Baker','Skelly Electric','Taylor Energy','California Solar Electric','Blue Sky Center','EPX','SJCE'];
 
-let contacts = [];
-let meetings = [];
-let viewMode = 'weekly';
-let periodOffset = 0;
-let chart = null;
+let contacts = [], meetings = [];
+let viewMode = 'weekly', periodOffset = 0, chart = null;
 
+// ========== DATA LOADING ==========
 async function loadData() {
   document.getElementById('syncStatus').textContent = 'Loading...';
-
-  // Fetch in chunks to handle >1000 rows
-  let allContacts = [], allMeetings = [];
-  let from = 0;
+  let allC = [], allM = [], from = 0;
   while (true) {
     const { data } = await sb.from('growth_contacts').select('*').range(from, from + 999);
     if (!data || data.length === 0) break;
-    allContacts = allContacts.concat(data);
+    allC = allC.concat(data);
     if (data.length < 1000) break;
     from += 1000;
   }
@@ -166,75 +177,158 @@ async function loadData() {
   while (true) {
     const { data } = await sb.from('growth_meetings').select('*').range(from, from + 999);
     if (!data || data.length === 0) break;
-    allMeetings = allMeetings.concat(data);
+    allM = allM.concat(data);
     if (data.length < 1000) break;
     from += 1000;
   }
-
-  contacts = allContacts;
-  meetings = allMeetings;
+  contacts = allC;
+  meetings = allM;
   document.getElementById('syncStatus').textContent = `${contacts.length.toLocaleString()} contacts · ${meetings.length.toLocaleString()} meetings`;
   refresh();
 }
 
-function getWeekStart(d) { const dt = new Date(d); const day = dt.getDay(); dt.setDate(dt.getDate() - day + (day===0?-6:1)); dt.setHours(0,0,0,0); return dt; }
+// ========== SYNC ==========
+async function callFunc(body) {
+  const res = await fetch(FUNC_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+async function runSync() {
+  const btn = document.getElementById('syncBtn');
+  const overlay = document.getElementById('syncOverlay');
+  const progress = document.getElementById('syncProgress');
+  const detail = document.getElementById('syncDetail');
+  const bar = document.getElementById('syncBar');
+
+  btn.classList.add('syncing');
+  btn.disabled = true;
+  overlay.classList.add('show');
+
+  try {
+    // Step 1: Fetch list
+    progress.textContent = 'Step 1/3: Fetching contact list...';
+    detail.textContent = 'Getting contact IDs from HubSpot list';
+    bar.style.width = '10%';
+
+    const listResult = await callFunc({ step: 'list' });
+    if (!listResult.success) throw new Error(listResult.error || 'List step failed');
+
+    const totalIds = listResult.contact_ids_fetched || 0;
+    progress.textContent = `Step 2/3: Syncing ${totalIds.toLocaleString()} contacts...`;
+    bar.style.width = '20%';
+
+    // Step 2: Batch contacts
+    let batchStart = 0;
+    let totalSynced = 0;
+    let complete = false;
+
+    while (!complete) {
+      detail.textContent = `Processing batch ${batchStart.toLocaleString()} / ${totalIds.toLocaleString()}`;
+      const pct = 20 + (batchStart / Math.max(totalIds, 1)) * 50;
+      bar.style.width = pct + '%';
+
+      const contactResult = await callFunc({ step: 'contacts', batch_start: batchStart });
+      if (!contactResult.success) throw new Error(contactResult.error || 'Contacts step failed');
+
+      totalSynced += contactResult.contacts_synced || 0;
+      complete = contactResult.complete;
+
+      if (!complete) {
+        // Parse next batch_start from progress
+        const match = contactResult.progress?.match(/^(\d+)/);
+        batchStart = match ? parseInt(match[1]) : batchStart + 10000;
+      }
+    }
+
+    progress.textContent = `Step 3/3: Syncing meetings...`;
+    detail.textContent = `${totalSynced.toLocaleString()} contacts done, now fetching meetings`;
+    bar.style.width = '80%';
+
+    // Step 3: Meetings
+    const meetResult = await callFunc({ step: 'meetings' });
+
+    bar.style.width = '100%';
+    progress.textContent = 'Sync complete!';
+    detail.textContent = `${totalSynced.toLocaleString()} contacts · ${(meetResult.meetings_synced || 0).toLocaleString()} meetings`;
+
+    await new Promise(r => setTimeout(r, 1500));
+
+    // Reload data
+    await loadData();
+
+  } catch (err) {
+    progress.textContent = 'Sync error';
+    detail.textContent = err.message;
+    await new Promise(r => setTimeout(r, 3000));
+  } finally {
+    overlay.classList.remove('show');
+    btn.classList.remove('syncing');
+    btn.disabled = false;
+    bar.style.width = '0%';
+  }
+}
+
+// ========== PERIOD UTILS ==========
+function getWeekStart(d) { const dt=new Date(d); const day=dt.getDay(); dt.setDate(dt.getDate()-day+(day===0?-6:1)); dt.setHours(0,0,0,0); return dt; }
 function getPeriodKey(date) {
-  const d = new Date(date);
-  if (viewMode==='weekly') { const ws=getWeekStart(d); return ws.toISOString().split('T')[0]; }
+  const d=new Date(date);
+  if(viewMode==='weekly'){const ws=getWeekStart(d);return ws.toISOString().split('T')[0];}
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 }
 function getCurrentPeriodKey() {
-  const now = new Date();
-  if (viewMode==='weekly') { const ws=getWeekStart(now); ws.setDate(ws.getDate()+periodOffset*7); return ws.toISOString().split('T')[0]; }
-  const d = new Date(now.getFullYear(), now.getMonth()+periodOffset, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  const now=new Date();
+  if(viewMode==='weekly'){const ws=getWeekStart(now);ws.setDate(ws.getDate()+periodOffset*7);return ws.toISOString().split('T')[0];}
+  const d=new Date(now.getFullYear(),now.getMonth()+periodOffset,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 }
 function getPrevKey(k) {
-  if (viewMode==='weekly') { const d=new Date(k); d.setDate(d.getDate()-7); return d.toISOString().split('T')[0]; }
-  const [y,m]=k.split('-').map(Number); const d=new Date(y,m-2,1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  if(viewMode==='weekly'){const d=new Date(k);d.setDate(d.getDate()-7);return d.toISOString().split('T')[0];}
+  const[y,m]=k.split('-').map(Number);const d=new Date(y,m-2,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 }
 function formatPeriod(k) {
-  if (viewMode==='weekly') { const d=new Date(k); const e=new Date(d); e.setDate(e.getDate()+6); const o={month:'short',day:'numeric'}; return `${d.toLocaleDateString('en-US',o)} – ${e.toLocaleDateString('en-US',o)}, ${d.getFullYear()}`; }
+  if(viewMode==='weekly'){const d=new Date(k);const e=new Date(d);e.setDate(e.getDate()+6);const o={month:'short',day:'numeric'};return `${d.toLocaleDateString('en-US',o)} – ${e.toLocaleDateString('en-US',o)}, ${d.getFullYear()}`;}
   return new Date(k+'-01').toLocaleDateString('en-US',{month:'long',year:'numeric'});
 }
 function formatShort(k) {
-  if (viewMode==='weekly') { const d=new Date(k); return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
-  const [y,m]=k.split('-'); return new Date(y,m-1,1).toLocaleDateString('en-US',{month:'short',year:'2-digit'});
+  if(viewMode==='weekly'){const d=new Date(k);return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+  const[y,m]=k.split('-');return new Date(y,m-1,1).toLocaleDateString('en-US',{month:'short',year:'2-digit'});
 }
 
+// ========== METRICS ==========
 function filterC(list) {
-  if (!document.getElementById('excludePartners').checked) return list;
-  return list.filter(c => !PARTNER_SOURCES.includes(c.attributed_source));
+  if(!document.getElementById('excludePartners').checked) return list;
+  return list.filter(c=>!PARTNER_SOURCES.includes(c.attributed_source));
 }
 
-function metrics(pk) {
-  const fc = filterC(contacts);
-  const mqls = fc.filter(c => c.mql_date && getPeriodKey(c.mql_date)===pk).length;
-  const sqls = fc.filter(c => c.sql_date && getPeriodKey(c.sql_date)===pk).length;
-  const mtgs = meetings.filter(m => m.start_time && getPeriodKey(m.start_time)===pk).length;
-  const sits = meetings.filter(m => {
-    if (!m.start_time || getPeriodKey(m.start_time)!==pk) return false;
-    const o = (m.outcome||'').toLowerCase();
-    return o.includes('completed') || o.includes('not needed') || o.includes('docs needed') || o==='cancelled_not_needed' || o==='docs_needed';
+function calcMetrics(pk) {
+  const fc=filterC(contacts);
+  const mqls=fc.filter(c=>c.mql_date&&getPeriodKey(c.mql_date)===pk).length;
+  const sqls=fc.filter(c=>c.sql_date&&getPeriodKey(c.sql_date)===pk).length;
+  const mtgs=meetings.filter(m=>m.start_time&&getPeriodKey(m.start_time)===pk).length;
+  const sits=meetings.filter(m=>{
+    if(!m.start_time||getPeriodKey(m.start_time)!==pk) return false;
+    const o=(m.outcome||'').toLowerCase().replace(/[_:]/g,' ');
+    return o.includes('completed')||o.includes('not needed')||o.includes('docs needed');
   }).length;
-  const closes = fc.filter(c => {
-    const s = c.lifecycle_stage;
-    if (s !== 'customer') return false;
-    const d = c.lifecycle_stage_date;
-    return d && getPeriodKey(d)===pk;
+  const closes=fc.filter(c=>{
+    if(c.lifecycle_stage!=='customer') return false;
+    return c.lifecycle_stage_date&&getPeriodKey(c.lifecycle_stage_date)===pk;
   }).length;
-  return { mqls, sqls, mtgs, sits, closes };
+  return {mqls,sqls,mtgs,sits,closes};
 }
 
-function renderKPIs(cur, prev) {
-  const cards = [
-    {label:'MQLs',key:'mqls'},{label:'SQLs',key:'sqls'},{label:'Meetings',key:'mtgs'},{label:'Sits',key:'sits'},{label:'Closes',key:'closes'}
-  ];
-  document.getElementById('kpiGrid').innerHTML = cards.map(c => {
-    const v=cur[c.key], p=prev[c.key];
+// ========== RENDERERS ==========
+function renderKPIs(cur,prev) {
+  const cards=[{l:'MQLs',k:'mqls'},{l:'SQLs',k:'sqls'},{l:'Meetings',k:'mtgs'},{l:'Sits',k:'sits'},{l:'Closes',k:'closes'}];
+  document.getElementById('kpiGrid').innerHTML=cards.map(c=>{
+    const v=cur[c.k],p=prev[c.k];
     let ct='—',cc='flat';
     if(p>0){const pct=Math.round(((v-p)/p)*100);ct=pct>0?`+${pct}%`:`${pct}%`;cc=pct>0?'up':pct<0?'down':'flat';}
     else if(v>0){ct='+∞';cc='up';}
-    return `<div class="kpi-card"><div class="kpi-label">${c.label}</div><div class="kpi-value">${v.toLocaleString()}</div><div class="kpi-change ${cc}">${ct}</div><div class="kpi-prev">prev: ${p.toLocaleString()}</div></div>`;
+    return `<div class="kpi-card"><div class="kpi-label">${c.l}</div><div class="kpi-value">${v.toLocaleString()}</div><div class="kpi-change ${cc}">${ct}</div><div class="kpi-prev">prev: ${p.toLocaleString()}</div></div>`;
   }).join('');
 }
 
@@ -252,9 +346,9 @@ function renderFunnel(m) {
 
 function renderTrend() {
   const n=viewMode==='weekly'?12:6;
-  const periods=[]; let k=getCurrentPeriodKey();
+  const periods=[];let k=getCurrentPeriodKey();
   for(let i=0;i<n;i++){periods.unshift(k);k=getPrevKey(k);}
-  const data=periods.map(p=>metrics(p));
+  const data=periods.map(p=>calcMetrics(p));
   const labels=periods.map(formatShort);
   const ctx=document.getElementById('trendChart').getContext('2d');
   if(chart)chart.destroy();
@@ -264,15 +358,19 @@ function renderTrend() {
     {label:'Meetings',data:data.map(d=>d.mtgs),borderColor:'#f59e0b',tension:.3,fill:false,pointRadius:3,borderWidth:2},
     {label:'Sits',data:data.map(d=>d.sits),borderColor:'#a855f7',tension:.3,fill:false,pointRadius:3,borderWidth:2},
     {label:'Closes',data:data.map(d=>d.closes),borderColor:'#ec4899',tension:.3,fill:false,pointRadius:3,borderWidth:2}
-  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},plugins:{legend:{position:'top',labels:{color:'#8896aa',font:{family:'DM Sans',size:11},boxWidth:10,padding:14}},tooltip:{backgroundColor:'#1a2234',titleColor:'#e2e8f0',bodyColor:'#e2e8f0',borderColor:'#1e2d44',borderWidth:1,bodyFont:{family:'Space Mono',size:11}}},scales:{x:{ticks:{color:'#8896aa',font:{family:'DM Sans',size:10}},grid:{color:'#1e2d44'}},y:{ticks:{color:'#8896aa',font:{family:'Space Mono',size:10}},grid:{color:'#1e2d44'},beginAtZero:true}}}});
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
+    plugins:{legend:{position:'top',labels:{color:'#8896aa',font:{family:'DM Sans',size:11},boxWidth:10,padding:14}},
+      tooltip:{backgroundColor:'#1a2234',titleColor:'#e2e8f0',bodyColor:'#e2e8f0',borderColor:'#1e2d44',borderWidth:1,bodyFont:{family:'Space Mono',size:11}}},
+    scales:{x:{ticks:{color:'#8896aa',font:{family:'DM Sans',size:10}},grid:{color:'#1e2d44'}},
+      y:{ticks:{color:'#8896aa',font:{family:'Space Mono',size:10}},grid:{color:'#1e2d44'},beginAtZero:true}}}});
   document.getElementById('trendTitle').textContent=viewMode==='weekly'?'Trend — Last 12 Weeks':'Trend — Last 6 Months';
 }
 
 function renderTable() {
   const n=viewMode==='weekly'?12:6;
-  const periods=[]; let k=getCurrentPeriodKey();
+  const periods=[];let k=getCurrentPeriodKey();
   for(let i=0;i<n;i++){periods.unshift(k);k=getPrevKey(k);}
-  const data=periods.map(p=>({key:p,...metrics(p)}));
+  const data=periods.map(p=>({key:p,...calcMetrics(p)}));
   const maxM=Math.max(...data.map(d=>d.mqls),1);
   document.getElementById('tableTitle').textContent=viewMode==='weekly'?'Breakdown by Week':'Breakdown by Month';
   document.getElementById('tableHead').innerHTML='<tr><th>Period</th><th>MQLs</th><th>SQLs</th><th>Meetings</th><th>Sits</th><th>Closes</th><th>MQL→SQL</th><th>Mtg→Sit</th></tr>';
@@ -286,22 +384,22 @@ function renderTable() {
 }
 
 function refresh() {
-  const ck=getCurrentPeriodKey(), pk=getPrevKey(ck);
-  renderKPIs(metrics(ck),metrics(pk));
-  renderFunnel(metrics(ck));
+  const ck=getCurrentPeriodKey(),pk=getPrevKey(ck);
+  renderKPIs(calcMetrics(ck),calcMetrics(pk));
+  renderFunnel(calcMetrics(ck));
   renderTrend();
   renderTable();
   document.getElementById('periodLabel').textContent=formatPeriod(ck);
 }
 
 function setView(mode) {
-  viewMode=mode; periodOffset=0;
+  viewMode=mode;periodOffset=0;
   document.querySelectorAll('.period-toggle button').forEach(b=>b.classList.remove('active'));
   event.target.classList.add('active');
   refresh();
 }
 
-function navigatePeriod(dir) { periodOffset+=dir; refresh(); }
+function navigatePeriod(dir){periodOffset+=dir;refresh();}
 
 loadData();
 </script>
