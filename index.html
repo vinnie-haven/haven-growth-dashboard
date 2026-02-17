@@ -305,17 +305,30 @@ function filterC(list) {
 
 function calcMetrics(pk) {
   const fc=filterC(contacts);
-  const mqls=fc.filter(c=>c.mql_date&&getPeriodKey(c.mql_date)===pk).length;
-  const sqls=fc.filter(c=>c.sql_date&&getPeriodKey(c.sql_date)===pk).length;
+  // MQLs = contacts CREATED in period with stage MQL, SQL, Opportunity, or Customer
+  const mqlStages=['marketingqualifiedlead','salesqualifiedlead','opportunity','99994170','customer'];
+  const mqls=fc.filter(c=>{
+    if(!c.create_date||getPeriodKey(c.create_date)!==pk) return false;
+    return mqlStages.includes(c.lifecycle_stage);
+  }).length;
+  // SQLs = contacts CREATED in period with stage SQL, Opportunity, or Customer
+  const sqlStages=['salesqualifiedlead','opportunity','99994170','customer'];
+  const sqls=fc.filter(c=>{
+    if(!c.create_date||getPeriodKey(c.create_date)!==pk) return false;
+    return sqlStages.includes(c.lifecycle_stage);
+  }).length;
+  // Meetings by start_time
   const mtgs=meetings.filter(m=>m.start_time&&getPeriodKey(m.start_time)===pk).length;
+  // Sits = completed meetings
   const sits=meetings.filter(m=>{
     if(!m.start_time||getPeriodKey(m.start_time)!==pk) return false;
     const o=(m.outcome||'').toLowerCase().replace(/[_:]/g,' ');
     return o.includes('completed')||o.includes('not needed')||o.includes('docs needed');
   }).length;
+  // Closes = customers CREATED in period
   const closes=fc.filter(c=>{
     if(c.lifecycle_stage!=='customer') return false;
-    return c.lifecycle_stage_date&&getPeriodKey(c.lifecycle_stage_date)===pk;
+    return c.create_date&&getPeriodKey(c.create_date)===pk;
   }).length;
   return {mqls,sqls,mtgs,sits,closes};
 }
