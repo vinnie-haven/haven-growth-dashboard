@@ -593,7 +593,7 @@ const CONFIG = {
   SUPABASE_ANON_KEY: 'sb_publishable_BjuP0L7Bw2_903MXWqf6Ag_c5QOuB3r',
 };
 
-const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
 // ── State ──
 let currentView = 'weekly'; // 'weekly' | 'monthly'
@@ -617,8 +617,8 @@ async function init() {
 
 async function loadData() {
   const [contactsRes, meetingsRes] = await Promise.all([
-    supabase.from('growth_contacts').select('*'),
-    supabase.from('growth_meetings').select('*')
+    sb.from('growth_contacts').select('*'),
+    sb.from('growth_meetings').select('*')
   ]);
 
   if (contactsRes.error) throw contactsRes.error;
