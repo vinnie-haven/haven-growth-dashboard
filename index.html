@@ -288,9 +288,9 @@ function renderTable(){
   for(let i=0;i<n;i++){periods.unshift(k);k=getPrevKey(k);}
   const data=periods.map(p=>({key:p,...calcMetrics(p)})),maxM=Math.max(...data.map(d=>d.mqls),1);
   document.getElementById('tableTitle').textContent=viewMode==='weekly'?'Breakdown by Week':'Breakdown by Month';
-  document.getElementById('tableHead').innerHTML='<tr><th>Period</th><th>MQLs</th><th>SQLs</th><th>Meetings</th><th>Sits</th><th>Closes (Created)</th><th>Closes (Won)</th><th>MQL→SQL</th><th>Mtg→Sit</th></tr>';
-  document.getElementById('tableBody').innerHTML=data.map(d=>{const l=formatPeriod(d.key),bw=Math.max((d.mqls/maxM)*60,2),r1=d.mqls>0?Math.round((d.sqls/d.mqls)*100)+'%':'—',r2=d.mtgs>0?Math.round((d.sits/d.mtgs)*100)+'%':'—';
-    return`<tr><td style="font-family:var(--font);font-weight:500;font-size:13px">${l}</td><td><span class="mini-bar" style="width:${bw}px;background:var(--accent)"></span>${d.mqls}</td><td>${d.sqls}</td><td>${d.mtgs}</td><td>${d.sits}</td><td>${d.closesCreated}</td><td>${d.closesDeal}</td><td>${r1}</td><td>${r2}</td></tr>`}).join('');
+  document.getElementById('tableHead').innerHTML='<tr><th>Period</th><th>MQLs</th><th>SQLs</th><th>Meetings</th><th>Sits</th><th>Closes (Created)</th><th>Closes (Won)</th><th>MQL→SQL</th><th>Mtg→Sit</th><th>Sit→Close</th></tr>';
+  document.getElementById('tableBody').innerHTML=data.map(d=>{const l=formatPeriod(d.key),bw=Math.max((d.mqls/maxM)*60,2),r1=d.mqls>0?Math.round((d.sqls/d.mqls)*100)+'%':'—',r2=d.mtgs>0?Math.round((d.sits/d.mtgs)*100)+'%':'—',r3=d.sits>0?Math.round((d.closesDeal/d.sits)*100)+'%':'—';
+    return`<tr><td style="font-family:var(--font);font-weight:500;font-size:13px">${l}</td><td><span class="mini-bar" style="width:${bw}px;background:var(--accent)"></span>${d.mqls}</td><td>${d.sqls}</td><td>${d.mtgs}</td><td>${d.sits}</td><td>${d.closesCreated}</td><td>${d.closesDeal}</td><td>${r1}</td><td>${r2}</td><td>${r3}</td></tr>`}).join('');
 }
 
 // ===== SPEND RENDERERS =====
