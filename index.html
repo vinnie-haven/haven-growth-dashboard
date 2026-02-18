@@ -273,16 +273,17 @@ async function runSync() {
 }
 
 // ========== PERIOD UTILS ==========
-function getWeekStart(d) { const dt=new Date(d); const day=dt.getDay(); dt.setDate(dt.getDate()-day+(day===0?-6:1)); dt.setHours(0,0,0,0); return dt; }
+function getWeekStart(d) { const dt=new Date(d); const day=dt.getUTCDay(); const diff=day===0?-6:1-day; dt.setUTCDate(dt.getUTCDate()+diff); return new Date(Date.UTC(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate())); }
 function getPeriodKey(date) {
   const d=new Date(date);
   if(viewMode==='weekly'){const ws=getWeekStart(d);return ws.toISOString().split('T')[0];}
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
 }
 function getCurrentPeriodKey() {
   const now=new Date();
-  if(viewMode==='weekly'){const ws=getWeekStart(now);ws.setDate(ws.getDate()+periodOffset*7);return ws.toISOString().split('T')[0];}
-  const d=new Date(now.getFullYear(),now.getMonth()+periodOffset,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  if(viewMode==='weekly'){const ws=getWeekStart(now);ws.setUTCDate(ws.getUTCDate()+periodOffset*7);return ws.toISOString().split('T')[0];}
+  const m=now.getUTCMonth()+periodOffset;const y=now.getUTCFullYear()+Math.floor(m/12);const mo=((m%12)+12)%12;
+  return `${y}-${String(mo+1).padStart(2,'0')}`;
 }
 function getPrevKey(k) {
   if(viewMode==='weekly'){const d=new Date(k);d.setDate(d.getDate()-7);return d.toISOString().split('T')[0];}
