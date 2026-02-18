@@ -286,16 +286,16 @@ function getCurrentPeriodKey() {
   return `${y}-${String(mo+1).padStart(2,'0')}`;
 }
 function getPrevKey(k) {
-  if(viewMode==='weekly'){const d=new Date(k);d.setDate(d.getDate()-7);return d.toISOString().split('T')[0];}
-  const[y,m]=k.split('-').map(Number);const d=new Date(y,m-2,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  if(viewMode==='weekly'){const d=new Date(k+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-7);return d.toISOString().split('T')[0];}
+  const[y,m]=k.split('-').map(Number);const nm=m-1;const ny=nm<1?y-1:y;const mo=nm<1?12:nm;return `${ny}-${String(mo).padStart(2,'0')}`;
 }
 function formatPeriod(k) {
-  if(viewMode==='weekly'){const d=new Date(k);const e=new Date(d);e.setDate(e.getDate()+6);const o={month:'short',day:'numeric'};return `${d.toLocaleDateString('en-US',o)} – ${e.toLocaleDateString('en-US',o)}, ${d.getFullYear()}`;}
-  return new Date(k+'-01').toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  if(viewMode==='weekly'){const d=new Date(k+'T00:00:00Z');const e=new Date(d);e.setUTCDate(e.getUTCDate()+6);const o={month:'short',day:'numeric',timeZone:'UTC'};return `${d.toLocaleDateString('en-US',o)} – ${e.toLocaleDateString('en-US',o)}, ${d.getUTCFullYear()}`;}
+  const[y,m]=k.split('-');return new Date(Date.UTC(y,m-1,1)).toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'});
 }
 function formatShort(k) {
-  if(viewMode==='weekly'){const d=new Date(k);return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
-  const[y,m]=k.split('-');return new Date(y,m-1,1).toLocaleDateString('en-US',{month:'short',year:'2-digit'});
+  if(viewMode==='weekly'){const d=new Date(k+'T00:00:00Z');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});}
+  const[y,m]=k.split('-');return new Date(Date.UTC(y,m-1,1)).toLocaleDateString('en-US',{month:'short',year:'2-digit',timeZone:'UTC'});
 }
 
 // ========== METRICS ==========
