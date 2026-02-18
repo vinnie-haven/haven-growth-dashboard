@@ -343,8 +343,11 @@ function calcMetrics(pk) {
     if(!c.create_date||getPeriodKey(c.create_date)!==pk) return false;
     return sqlStages.includes(c.lifecycle_stage);
   }).length;
-  // Meetings by start_time
-  const mtgs=meetings.filter(m=>m.start_time&&getPeriodKey(m.start_time)===pk).length;
+  // Meetings by created_date (when scheduled)
+  const mtgs=meetings.filter(m=>{
+    const d=m.created_date||m.start_time;
+    return d&&getPeriodKey(d)===pk;
+  }).length;
   // Sits = completed meetings
   const sits=meetings.filter(m=>{
     if(!m.start_time||getPeriodKey(m.start_time)!==pk) return false;
