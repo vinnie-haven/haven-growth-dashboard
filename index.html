@@ -61,7 +61,8 @@
   .kpi-change.flat { color:var(--text-dim); }
   .kpi-prev { font-size:11px; color:var(--text-dim); margin-top:2px; }
 
-  .charts-row { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:28px; }
+  .charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px; }
+  .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px; }
   .chart-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; }
   .chart-title { font-size:14px; font-weight:600; margin-bottom:16px; }
   .chart-container { position:relative; height:280px; }
@@ -92,7 +93,7 @@
   .sync-bar-track { height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
   .sync-bar-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.3s; }
 
-  @media(max-width:1100px) { .kpi-grid{grid-template-columns:repeat(3,1fr);} .charts-row{grid-template-columns:1fr;} }
+  @media(max-width:1100px) { .kpi-grid{grid-template-columns:repeat(3,1fr);} .charts-grid{grid-template-columns:1fr;} .charts-row{grid-template-columns:1fr;} }
   @media(max-width:700px) { .kpi-grid{grid-template-columns:repeat(2,1fr);} .controls{flex-direction:column;align-items:flex-start;} .topbar,.main,.controls{padding-left:16px;padding-right:16px;} }
 </style>
 </head>
@@ -127,11 +128,33 @@
 
 <div class="main">
   <div class="kpi-grid" id="kpiGrid"></div>
-  <div class="charts-row">
+  <div class="charts-grid">
     <div class="chart-card">
-      <div class="chart-title" id="trendTitle">Trend — Last 12 Weeks</div>
-      <div class="chart-container"><canvas id="trendChart"></canvas></div>
+      <div class="chart-title">MQLs</div>
+      <div class="chart-container"><canvas id="chartMqls"></canvas></div>
     </div>
+    <div class="chart-card">
+      <div class="chart-title">SQLs</div>
+      <div class="chart-container"><canvas id="chartSqls"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Meetings</div>
+      <div class="chart-container"><canvas id="chartMtgs"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Sits</div>
+      <div class="chart-container"><canvas id="chartSits"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Closes (Created)</div>
+      <div class="chart-container"><canvas id="chartClosesCreated"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Closes (Won)</div>
+      <div class="chart-container"><canvas id="chartClosesDeal"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-row">
     <div class="chart-card">
       <div class="chart-title">Conversion Funnel</div>
       <div class="funnel-stages" id="funnel"></div>
@@ -161,7 +184,8 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const PARTNER_SOURCES = ['PCE','CPA','QCS','Self-Generated','CEA','Baker','Skelly Electric','Taylor Energy','California Solar Electric','Blue Sky Center','EPX','SJCE'];
 
 let contacts = [], meetings = [];
-let viewMode = 'weekly', periodOffset = 0, chart = null;
+let viewMode = 'weekly', periodOffset = 0;
+let charts = {};
 
 // ========== DATA LOADING ==========
 async function loadData() {
@@ -369,20 +393,73 @@ function renderTrend() {
   for(let i=0;i<n;i++){periods.unshift(k);k=getPrevKey(k);}
   const data=periods.map(p=>calcMetrics(p));
   const labels=periods.map(formatShort);
-  const ctx=document.getElementById('trendChart').getContext('2d');
-  if(chart)chart.destroy();
-  chart=new Chart(ctx,{type:'line',data:{labels,datasets:[
-    {label:'MQLs',data:data.map(d=>d.mqls),borderColor:'#22d3a7',tension:.3,fill:false,pointRadius:3,borderWidth:2},
-    {label:'SQLs',data:data.map(d=>d.sqls),borderColor:'#3b82f6',tension:.3,fill:false,pointRadius:3,borderWidth:2},
-    {label:'Meetings',data:data.map(d=>d.mtgs),borderColor:'#f59e0b',tension:.3,fill:false,pointRadius:3,borderWidth:2},
-    {label:'Sits',data:data.map(d=>d.sits),borderColor:'#a855f7',tension:.3,fill:false,pointRadius:3,borderWidth:2},
-    {label:'Closes (Won)',data:data.map(d=>d.closesDeal),borderColor:'#ec4899',tension:.3,fill:false,pointRadius:3,borderWidth:2}
-  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
-    plugins:{legend:{position:'top',labels:{color:'#8896aa',font:{family:'DM Sans',size:11},boxWidth:10,padding:14}},
-      tooltip:{backgroundColor:'#1a2234',titleColor:'#e2e8f0',bodyColor:'#e2e8f0',borderColor:'#1e2d44',borderWidth:1,bodyFont:{family:'Space Mono',size:11}}},
-    scales:{x:{ticks:{color:'#8896aa',font:{family:'DM Sans',size:10}},grid:{color:'#1e2d44'}},
-      y:{ticks:{color:'#8896aa',font:{family:'Space Mono',size:10}},grid:{color:'#1e2d44'},beginAtZero:true}}}});
-  document.getElementById('trendTitle').textContent=viewMode==='weekly'?'Trend — Last 12 Weeks':'Trend — Last 6 Months';
+
+  const metricConfigs = [
+    { id: 'chartMqls', key: 'mqls', color: '#22d3a7', label: 'MQLs' },
+    { id: 'chartSqls', key: 'sqls', color: '#3b82f6', label: 'SQLs' },
+    { id: 'chartMtgs', key: 'mtgs', color: '#f59e0b', label: 'Meetings' },
+    { id: 'chartSits', key: 'sits', color: '#a855f7', label: 'Sits' },
+    { id: 'chartClosesCreated', key: 'closesCreated', color: '#ec4899', label: 'Closes (Created)' },
+    { id: 'chartClosesDeal', key: 'closesDeal', color: '#f43f5e', label: 'Closes (Won)' }
+  ];
+
+  metricConfigs.forEach(cfg => {
+    if (charts[cfg.id]) charts[cfg.id].destroy();
+    const ctx = document.getElementById(cfg.id).getContext('2d');
+    const values = data.map(d => d[cfg.key]);
+
+    charts[cfg.id] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: cfg.label,
+          data: values,
+          backgroundColor: cfg.color + '99',
+          borderColor: cfg.color,
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.7
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a2234',
+            titleColor: '#e2e8f0',
+            bodyColor: '#e2e8f0',
+            borderColor: '#1e2d44',
+            borderWidth: 1,
+            bodyFont: { family: 'Space Mono', size: 11 }
+          },
+          datalabels: false
+        },
+        layout: { padding: { top: 20 } },
+        scales: {
+          x: { ticks: { color: '#8896aa', font: { family: 'DM Sans', size: 10 } }, grid: { color: '#1e2d44' } },
+          y: { ticks: { color: '#8896aa', font: { family: 'Space Mono', size: 10 } }, grid: { color: '#1e2d44' }, beginAtZero: true }
+        },
+        animation: {
+          onComplete: function() {
+            const chartInstance = this;
+            const ctx2 = chartInstance.ctx;
+            ctx2.font = "bold 11px 'Space Mono', monospace";
+            ctx2.fillStyle = '#e2e8f0';
+            ctx2.textAlign = 'center';
+            ctx2.textBaseline = 'bottom';
+            const meta = chartInstance.getDatasetMeta(0);
+            meta.data.forEach((bar, i) => {
+              const val = values[i];
+              if (val > 0) ctx2.fillText(val.toLocaleString(), bar.x, bar.y - 4);
+            });
+          }
+        }
+      }
+    });
+  });
 }
 
 function renderTable() {
