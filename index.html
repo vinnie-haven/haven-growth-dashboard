@@ -189,13 +189,27 @@ function setScope(s,btn){metricScope=s;document.querySelectorAll('#scopeToggle b
 const MQL_S=['marketingqualifiedlead','salesqualifiedlead','opportunity','99994170','customer'];
 const SQL_S=['salesqualifiedlead','opportunity','99994170','customer'];
 
+function filterM(list){
+  const sv=document.getElementById('sourceFilter').value;
+  if(metricScope==='total'&&sv==='all')return list;
+  // Build contact id -> source lookup
+  const cMap={};contacts.forEach(c=>{cMap[c.id]=c.attributed_source||null});
+  return list.filter(m=>{
+    if(!m.contact_id)return false;
+    const src=cMap[m.contact_id];
+    if(metricScope==='marketing'&&!MARKETING_SOURCES.includes(src))return false;
+    if(sv!=='all'&&src!==sv)return false;
+    return true;
+  });
+}
+
 function calcMetrics(pk){
-  const fc=filterC(contacts);
+  const fc=filterC(contacts),fm=filterM(meetings);
   return{
     mqls:fc.filter(c=>c.create_date&&getPeriodKey(c.create_date)===pk&&MQL_S.includes(c.lifecycle_stage)).length,
     sqls:fc.filter(c=>c.create_date&&getPeriodKey(c.create_date)===pk&&SQL_S.includes(c.lifecycle_stage)).length,
-    mtgs:meetings.filter(m=>{const d=m.created_date||m.start_time;return d&&getPeriodKey(d)===pk}).length,
-    sits:meetings.filter(m=>{if(!m.start_time||getPeriodKey(m.start_time)!==pk)return false;const o=(m.outcome||'').toLowerCase().replace(/[_:]/g,' ');return o.includes('completed')||o.includes('not needed')||o.includes('docs needed')}).length,
+    mtgs:fm.filter(m=>{const d=m.created_date||m.start_time;return d&&getPeriodKey(d)===pk}).length,
+    sits:fm.filter(m=>{if(!m.start_time||getPeriodKey(m.start_time)!==pk)return false;const o=(m.outcome||'').toLowerCase().replace(/[_:]/g,' ');return o.includes('completed')||o.includes('not needed')||o.includes('docs needed')}).length,
     closesCreated:fc.filter(c=>c.lifecycle_stage==='customer'&&c.create_date&&getPeriodKey(c.create_date)===pk).length,
     closesDeal:fc.filter(c=>c.recent_deal_close_date&&getPeriodKey(c.recent_deal_close_date)===pk&&c.lifecycle_stage==='customer').length
   };
@@ -203,9 +217,16 @@ function calcMetrics(pk){
 
 function calcBySource(pk){
   let fc=contacts;if(metricScope==='marketing')fc=fc.filter(c=>MARKETING_SOURCES.includes(c.attributed_source));
+  const cMap={};fc.forEach(c=>{cMap[c.id]=c.attributed_source||'Unknown'});
   const out={};
-  fc.forEach(c=>{const s=c.attributed_source||'Unknown';if(!out[s])out[s]={mqls:0,sqls:0,closes:0};
+  fc.forEach(c=>{const s=c.attributed_source||'Unknown';if(!out[s])out[s]={mqls:0,sqls:0,closes:0,mtgs:0,sits:0};
     if(c.create_date&&getPeriodKey(c.create_date)===pk){if(MQL_S.includes(c.lifecycle_stage))out[s].mqls++;if(SQL_S.includes(c.lifecycle_stage))out[s].sqls++;if(c.lifecycle_stage==='customer')out[s].closes++;}});
+  meetings.forEach(m=>{
+    if(!m.contact_id)return;const s=cMap[m.contact_id];if(!s)return;
+    if(!out[s])out[s]={mqls:0,sqls:0,closes:0,mtgs:0,sits:0};
+    const d=m.created_date||m.start_time;if(d&&getPeriodKey(d)===pk)out[s].mtgs++;
+    if(m.start_time&&getPeriodKey(m.start_time)===pk){const o=(m.outcome||'').toLowerCase().replace(/[_:]/g,' ');if(o.includes('completed')||o.includes('not needed')||o.includes('docs needed'))out[s].sits++;}
+  });
   return out;
 }
 const SRC_COLORS={'Direct mail':'#f59e0b','Direct Mail':'#f59e0b','Meta':'#3b82f6','Google Paid':'#22d3a7','Next Door':'#a855f7','Capital One':'#ec4899','Referrals Program':'#ef4444','LinkedIn':'#06b6d4','Other':'#78716c'};
@@ -301,12 +322,10 @@ function renderTrend(){
   makeStacked('srcMqls',labels,mqlDS,false);
   const sqlDS=calcMetricsBySource(periods,'sqls');
   makeStacked('srcSqls',labels,sqlDS,false);
-  // Closes by source (single period horizontal bar)
+  // Closes and Sits by source (single period horizontal bars)
   const ck=getCurrentPeriodKey(),sd=calcBySource(ck);
   makeHBar('srcCloses',sd,'closes');
-  // Sits by source not available (meetings don't link to contact source)
-  if(charts['srcSits'])charts['srcSits'].destroy();
-  const el=document.getElementById('srcSits');if(el){const ctx=el.getContext('2d');ctx.clearRect(0,0,el.width,el.height);ctx.font="13px 'DM Sans',sans-serif";ctx.fillStyle='#8896aa';ctx.textAlign='center';ctx.fillText('Sits not attributable by contact source',el.width/2,el.height/2);}
+  makeHBar('srcSits',sd,'sits');
 }
 function renderTable(){
   const n=viewMode==='weekly'?12:6,periods=[];let k=getCurrentPeriodKey();
