@@ -43,7 +43,7 @@
 
   .main { padding:0 32px 40px; }
 
-  .kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:28px; }
+  .kpi-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:16px; margin-bottom:28px; }
   .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; position:relative; overflow:hidden; transition:border-color 0.2s; }
   .kpi-card:hover { border-color:var(--accent); }
   .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
@@ -52,6 +52,7 @@
   .kpi-card:nth-child(3)::before { background:var(--accent3); }
   .kpi-card:nth-child(4)::before { background:var(--purple); }
   .kpi-card:nth-child(5)::before { background:var(--pink); }
+  .kpi-card:nth-child(6)::before { background:#f43f5e; }
   .kpi-label { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); margin-bottom:10px; }
   .kpi-value { font-family:var(--mono); font-size:32px; font-weight:700; line-height:1; margin-bottom:8px; }
   .kpi-change { font-family:var(--mono); font-size:12px; font-weight:700; }
@@ -326,17 +327,21 @@ function calcMetrics(pk) {
     const o=(m.outcome||'').toLowerCase().replace(/[_:]/g,' ');
     return o.includes('completed')||o.includes('not needed')||o.includes('docs needed');
   }).length;
-  // Closes = customers CREATED in period
-  const closes=fc.filter(c=>{
+  // Closes (by create date) = customers CREATED in period
+  const closesCreated=fc.filter(c=>{
     if(c.lifecycle_stage!=='customer') return false;
     return c.create_date&&getPeriodKey(c.create_date)===pk;
   }).length;
-  return {mqls,sqls,mtgs,sits,closes};
+  // Closes (by deal close date) = contacts whose recent_deal_close_date falls in period
+  const closesDeal=fc.filter(c=>{
+    return c.recent_deal_close_date&&getPeriodKey(c.recent_deal_close_date)===pk;
+  }).length;
+  return {mqls,sqls,mtgs,sits,closesCreated,closesDeal};
 }
 
 // ========== RENDERERS ==========
 function renderKPIs(cur,prev) {
-  const cards=[{l:'MQLs',k:'mqls'},{l:'SQLs',k:'sqls'},{l:'Meetings',k:'mtgs'},{l:'Sits',k:'sits'},{l:'Closes',k:'closes'}];
+  const cards=[{l:'MQLs',k:'mqls'},{l:'SQLs',k:'sqls'},{l:'Meetings',k:'mtgs'},{l:'Sits',k:'sits'},{l:'Closes (Created)',k:'closesCreated'},{l:'Closes (Won)',k:'closesDeal'}];
   document.getElementById('kpiGrid').innerHTML=cards.map(c=>{
     const v=cur[c.k],p=prev[c.k];
     let ct='—',cc='flat';
@@ -347,7 +352,7 @@ function renderKPIs(cur,prev) {
 }
 
 function renderFunnel(m) {
-  const stages=[{n:'MQLs',v:m.mqls,c:'var(--accent)'},{n:'SQLs',v:m.sqls,c:'var(--accent2)'},{n:'Meetings',v:m.mtgs,c:'var(--accent3)'},{n:'Sits',v:m.sits,c:'var(--purple)'},{n:'Closes',v:m.closes,c:'var(--pink)'}];
+  const stages=[{n:'MQLs',v:m.mqls,c:'var(--accent)'},{n:'SQLs',v:m.sqls,c:'var(--accent2)'},{n:'Meetings',v:m.mtgs,c:'var(--accent3)'},{n:'Sits',v:m.sits,c:'var(--purple)'},{n:'Closes',v:m.closesDeal,c:'var(--pink)'}];
   const mx=Math.max(...stages.map(s=>s.v),1);
   let h='';
   for(let i=0;i<stages.length;i++){
@@ -371,7 +376,7 @@ function renderTrend() {
     {label:'SQLs',data:data.map(d=>d.sqls),borderColor:'#3b82f6',tension:.3,fill:false,pointRadius:3,borderWidth:2},
     {label:'Meetings',data:data.map(d=>d.mtgs),borderColor:'#f59e0b',tension:.3,fill:false,pointRadius:3,borderWidth:2},
     {label:'Sits',data:data.map(d=>d.sits),borderColor:'#a855f7',tension:.3,fill:false,pointRadius:3,borderWidth:2},
-    {label:'Closes',data:data.map(d=>d.closes),borderColor:'#ec4899',tension:.3,fill:false,pointRadius:3,borderWidth:2}
+    {label:'Closes (Won)',data:data.map(d=>d.closesDeal),borderColor:'#ec4899',tension:.3,fill:false,pointRadius:3,borderWidth:2}
   ]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
     plugins:{legend:{position:'top',labels:{color:'#8896aa',font:{family:'DM Sans',size:11},boxWidth:10,padding:14}},
       tooltip:{backgroundColor:'#1a2234',titleColor:'#e2e8f0',bodyColor:'#e2e8f0',borderColor:'#1e2d44',borderWidth:1,bodyFont:{family:'Space Mono',size:11}}},
@@ -387,13 +392,13 @@ function renderTable() {
   const data=periods.map(p=>({key:p,...calcMetrics(p)}));
   const maxM=Math.max(...data.map(d=>d.mqls),1);
   document.getElementById('tableTitle').textContent=viewMode==='weekly'?'Breakdown by Week':'Breakdown by Month';
-  document.getElementById('tableHead').innerHTML='<tr><th>Period</th><th>MQLs</th><th>SQLs</th><th>Meetings</th><th>Sits</th><th>Closes</th><th>MQL→SQL</th><th>Mtg→Sit</th></tr>';
+  document.getElementById('tableHead').innerHTML='<tr><th>Period</th><th>MQLs</th><th>SQLs</th><th>Meetings</th><th>Sits</th><th>Closes (Created)</th><th>Closes (Won)</th><th>MQL→SQL</th><th>Mtg→Sit</th></tr>';
   document.getElementById('tableBody').innerHTML=data.map(d=>{
     const label=formatPeriod(d.key);
     const bw=Math.max((d.mqls/maxM)*60,2);
     const r1=d.mqls>0?Math.round((d.sqls/d.mqls)*100)+'%':'—';
     const r2=d.mtgs>0?Math.round((d.sits/d.mtgs)*100)+'%':'—';
-    return `<tr><td style="font-family:var(--font);font-weight:500;font-size:13px">${label}</td><td><span class="mini-bar" style="width:${bw}px;background:var(--accent)"></span>${d.mqls}</td><td>${d.sqls}</td><td>${d.mtgs}</td><td>${d.sits}</td><td>${d.closes}</td><td>${r1}</td><td>${r2}</td></tr>`;
+    return `<tr><td style="font-family:var(--font);font-weight:500;font-size:13px">${label}</td><td><span class="mini-bar" style="width:${bw}px;background:var(--accent)"></span>${d.mqls}</td><td>${d.sqls}</td><td>${d.mtgs}</td><td>${d.sits}</td><td>${d.closesCreated}</td><td>${d.closesDeal}</td><td>${r1}</td><td>${r2}</td></tr>`;
   }).join('');
 }
 
