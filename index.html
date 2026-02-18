@@ -115,7 +115,7 @@ const SB_URL='https://vnxerxefgodekwjdxfqc.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZueGVyeGVmZ29kZWt3amR4ZnFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1MjY3MjgsImV4cCI6MjA4NDEwMjcyOH0.yV2rEL6PDBW2qjctwsk67-l77miABQ0ssiI6MA2CfEo';
 const sb=window.supabase.createClient(SB_URL,SB_KEY);
 const FUNC_URL=SB_URL+'/functions/v1/sync-growth-marketing';
-const MARKETING_SOURCES=['Direct mail','Meta','Google Paid','Next Door','Capital One','Referrals Program','LinkedIn'];
+const MARKETING_SOURCES=['Direct mail','Direct Mail','Meta','Google Paid','Next Door','Capital One','Referrals Program','LinkedIn'];
 const CHANNELS=['Direct mail','Meta','Google Paid','Next Door','Capital One','Referrals Program'];
 const CH_COLORS={'Direct mail':'#f59e0b','Meta':'#3b82f6','Google Paid':'#22d3a7','Next Door':'#a855f7','Capital One':'#ec4899','Referrals Program':'#ef4444'};
 
@@ -208,7 +208,7 @@ function calcBySource(pk){
     if(c.create_date&&getPeriodKey(c.create_date)===pk){if(MQL_S.includes(c.lifecycle_stage))out[s].mqls++;if(SQL_S.includes(c.lifecycle_stage))out[s].sqls++;if(c.lifecycle_stage==='customer')out[s].closes++;}});
   return out;
 }
-const SRC_COLORS={'Direct mail':'#f59e0b','Meta':'#3b82f6','Google Paid':'#22d3a7','Next Door':'#a855f7','Capital One':'#ec4899','Referrals Program':'#ef4444','LinkedIn':'#06b6d4','Other':'#78716c'};
+const SRC_COLORS={'Direct mail':'#f59e0b','Direct Mail':'#f59e0b','Meta':'#3b82f6','Google Paid':'#22d3a7','Next Door':'#a855f7','Capital One':'#ec4899','Referrals Program':'#ef4444','LinkedIn':'#06b6d4','Other':'#78716c'};
 function getSrcColor(s){return SRC_COLORS[s]||'#'+((Math.abs(s.split('').reduce((a,c)=>((a<<5)-a)+c.charCodeAt(0),0))%0xCCCCCC)+0x333333).toString(16).slice(-6);}
 function calcMetricsBySource(periods,key){
   const srcTotals={};
