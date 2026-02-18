@@ -208,6 +208,25 @@ function calcBySource(pk){
     if(c.create_date&&getPeriodKey(c.create_date)===pk){if(MQL_S.includes(c.lifecycle_stage))out[s].mqls++;if(SQL_S.includes(c.lifecycle_stage))out[s].sqls++;if(c.lifecycle_stage==='customer')out[s].closes++;}});
   return out;
 }
+const SRC_COLORS={'direct_traffic':'#f59e0b','Meta':'#3b82f6','Google Paid':'#22d3a7','Capital One':'#ec4899','Next Door':'#a855f7','Referrals Program':'#ef4444','PCE':'#06b6d4','CPA':'#84cc16','QCS':'#f97316','Self-Generated':'#6b7280','CEA':'#d946ef','Baker':'#14b8a6','Other':'#78716c'};
+function getSrcColor(s){return SRC_COLORS[s]||'#'+((Math.abs(s.split('').reduce((a,c)=>((a<<5)-a)+c.charCodeAt(0),0))%0xCCCCCC)+0x333333).toString(16).slice(-6);}
+function calcMetricsBySource(periods,key){
+  const srcTotals={};
+  const perPeriod=periods.map(pk=>{
+    let fc=contacts;if(metricScope==='marketing')fc=fc.filter(c=>!PARTNERS.includes(c.attributed_source));
+    const sv=document.getElementById('sourceFilter').value;if(sv!=='all')fc=fc.filter(c=>c.attributed_source===sv);
+    const out={};
+    fc.forEach(c=>{
+      if(!c.create_date||getPeriodKey(c.create_date)!==pk)return;
+      const s=c.attributed_source||'Unknown';
+      if(key==='mqls'&&MQL_S.includes(c.lifecycle_stage)){out[s]=(out[s]||0)+1;srcTotals[s]=(srcTotals[s]||0)+1;}
+      if(key==='sqls'&&SQL_S.includes(c.lifecycle_stage)){out[s]=(out[s]||0)+1;srcTotals[s]=(srcTotals[s]||0)+1;}
+    });
+    return out;
+  });
+  const activeSrcs=Object.entries(srcTotals).sort((a,b)=>b[1]-a[1]).map(([s])=>s);
+  return activeSrcs.map(s=>({label:sourceLabel(s),data:perPeriod.map(pp=>pp[s]||0),backgroundColor:getSrcColor(s)+'cc',borderColor:getSrcColor(s),borderWidth:1,borderRadius:2}));
+}
 
 // ===== SPEND =====
 function getSpend(pk){
@@ -237,12 +256,13 @@ function makeBar(id,labels,vals,color,isCurrency){
     }});
 }
 
-function makeStacked(id,labels,datasets){
+function makeStacked(id,labels,datasets,isCurrency){
   if(charts[id])charts[id].destroy();const el=document.getElementById(id);if(!el)return;
+  const cur=isCurrency!==false;
   charts[id]=new Chart(el.getContext('2d'),{type:'bar',data:{labels,datasets},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#8896aa',font:{family:'DM Sans',size:10},boxWidth:10,padding:8}},
-      tooltip:{backgroundColor:'#1a2234',titleColor:'#e2e8f0',bodyColor:'#e2e8f0',borderColor:'#1e2d44',borderWidth:1,callbacks:{label:c=>`${c.dataset.label}: $${Math.round(c.raw).toLocaleString()}`}}},
-      scales:{x:{stacked:true,ticks:{color:'#8896aa',font:{family:'DM Sans',size:10}},grid:{color:'#1e2d44'}},y:{stacked:true,ticks:{color:'#8896aa',font:{family:'Space Mono',size:10},callback:v=>'$'+v.toLocaleString()},grid:{color:'#1e2d44'},beginAtZero:true}}}});
+      tooltip:{backgroundColor:'#1a2234',titleColor:'#e2e8f0',bodyColor:'#e2e8f0',borderColor:'#1e2d44',borderWidth:1,callbacks:{label:c=>cur?`${c.dataset.label}: $${Math.round(c.raw).toLocaleString()}`:`${c.dataset.label}: ${c.raw.toLocaleString()}`}}},
+      scales:{x:{stacked:true,ticks:{color:'#8896aa',font:{family:'DM Sans',size:10}},grid:{color:'#1e2d44'}},y:{stacked:true,ticks:{color:'#8896aa',font:{family:'Space Mono',size:10},callback:v=>cur?'$'+v.toLocaleString():v.toLocaleString()},grid:{color:'#1e2d44'},beginAtZero:true}}}});
 }
 
 function makeHBar(id,srcData,key){
@@ -276,9 +296,14 @@ function renderTrend(){
   const data=periods.map(p=>calcMetrics(p)),labels=periods.map(formatShort);
   [{id:'chartMqls',key:'mqls',c:'#22d3a7'},{id:'chartSqls',key:'sqls',c:'#3b82f6'},{id:'chartMtgs',key:'mtgs',c:'#f59e0b'},{id:'chartSits',key:'sits',c:'#a855f7'},{id:'chartClosesCreated',key:'closesCreated',c:'#ec4899'},{id:'chartClosesDeal',key:'closesDeal',c:'#f43f5e'}]
     .forEach(cfg=>makeBar(cfg.id,labels,data.map(d=>d[cfg.key]),cfg.c,false));
-  // Source distribution
+  // Source distribution - stacked column charts for MQLs and SQLs
+  const mqlDS=calcMetricsBySource(periods,'mqls');
+  makeStacked('srcMqls',labels,mqlDS,false);
+  const sqlDS=calcMetricsBySource(periods,'sqls');
+  makeStacked('srcSqls',labels,sqlDS,false);
+  // Closes by source (single period horizontal bar)
   const ck=getCurrentPeriodKey(),sd=calcBySource(ck);
-  makeHBar('srcMqls',sd,'mqls');makeHBar('srcSqls',sd,'sqls');makeHBar('srcCloses',sd,'closes');
+  makeHBar('srcCloses',sd,'closes');
   // Sits by source not available (meetings don't link to contact source)
   if(charts['srcSits'])charts['srcSits'].destroy();
   const el=document.getElementById('srcSits');if(el){const ctx=el.getContext('2d');ctx.clearRect(0,0,el.width,el.height);ctx.font="13px 'DM Sans',sans-serif";ctx.fillStyle='#8896aa';ctx.textAlign='center';ctx.fillText('Sits not attributable by contact source',el.width/2,el.height/2);}
