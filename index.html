@@ -137,9 +137,14 @@ async function loadData(){
 }
 function populateSourceFilter(){
   const s=new Set();contacts.forEach(c=>{if(c.attributed_source)s.add(c.attributed_source)});
+  const sources=[...s].sort();
+  const filtered=metricScope==='marketing'?sources.filter(v=>!PARTNERS.includes(v)):sources;
   const sel=document.getElementById('sourceFilter');
-  sel.innerHTML='<option value="all">All Sources</option>'+[...s].sort().map(v=>`<option value="${v}">${v}</option>`).join('');
+  const cur=sel.value;
+  sel.innerHTML='<option value="all">All Sources</option>'+filtered.map(v=>`<option value="${v}">${sourceLabel(v)}</option>`).join('');
+  if(filtered.includes(cur))sel.value=cur;else sel.value='all';
 }
+function sourceLabel(v){const map={'direct_traffic':'Direct Mail'};return map[v]||v;}
 
 // ===== SYNC =====
 async function callFunc(b){return(await fetch(FUNC_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},body:JSON.stringify(b)})).json()}
@@ -178,7 +183,7 @@ function filterC(list){
   if(sv!=='all')f=f.filter(c=>c.attributed_source===sv);
   return f;
 }
-function setScope(s,btn){metricScope=s;document.querySelectorAll('#scopeToggle button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');refresh();}
+function setScope(s,btn){metricScope=s;document.querySelectorAll('#scopeToggle button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');populateSourceFilter();refresh();}
 
 // ===== PIPELINE METRICS =====
 const MQL_S=['marketingqualifiedlead','salesqualifiedlead','opportunity','99994170','customer'];
@@ -245,7 +250,7 @@ function makeHBar(id,srcData,key){
   const entries=Object.entries(srcData).filter(([,v])=>v[key]>0).sort((a,b)=>b[1][key]-a[1][key]).slice(0,10);
   if(!entries.length){el.getContext('2d').clearRect(0,0,el.width,el.height);return;}
   const colors=['#22d3a7','#3b82f6','#f59e0b','#a855f7','#ec4899','#ef4444','#06b6d4','#84cc16','#f97316','#6b7280'];
-  charts[id]=new Chart(el.getContext('2d'),{type:'bar',data:{labels:entries.map(([k])=>k),datasets:[{data:entries.map(([,v])=>v[key]),backgroundColor:colors.slice(0,entries.length),borderWidth:0,borderRadius:4,barPercentage:.7}]},
+  charts[id]=new Chart(el.getContext('2d'),{type:'bar',data:{labels:entries.map(([k])=>sourceLabel(k)),datasets:[{data:entries.map(([,v])=>v[key]),backgroundColor:colors.slice(0,entries.length),borderWidth:0,borderRadius:4,barPercentage:.7}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a2234',titleColor:'#e2e8f0',bodyColor:'#e2e8f0'}},
       scales:{x:{ticks:{color:'#8896aa',font:{family:'Space Mono',size:10}},grid:{color:'#1e2d44'},beginAtZero:true},y:{ticks:{color:'#8896aa',font:{family:'DM Sans',size:10}},grid:{display:false}}}}});
 }
