@@ -17,7 +17,6 @@
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; }
-
   .topbar { display:flex; align-items:center; justify-content:space-between; padding:16px 32px; border-bottom:1px solid var(--border); background:var(--surface); }
   .topbar-left { display:flex; align-items:center; gap:16px; }
   .logo { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--accent); letter-spacing:2px; text-transform:uppercase; }
@@ -27,478 +26,320 @@
   .sync-btn:hover { border-color:var(--accent); color:var(--accent); }
   .sync-btn.syncing { color:var(--accent); border-color:var(--accent); opacity:0.7; cursor:wait; }
   .sync-status { font-family:var(--mono); font-size:11px; color:var(--text-dim); }
-
   .controls { display:flex; align-items:center; justify-content:space-between; padding:20px 32px; gap:16px; flex-wrap:wrap; }
-  .period-toggle { display:flex; background:var(--surface); border-radius:10px; padding:3px; border:1px solid var(--border); }
-  .period-toggle button { background:transparent; border:none; color:var(--text-dim); font-family:var(--font); font-size:13px; font-weight:500; padding:8px 20px; border-radius:8px; cursor:pointer; transition:all 0.2s; }
-  .period-toggle button.active { background:var(--accent); color:#0a0f1a; font-weight:600; }
-
+  .toggle-group { display:flex; background:var(--surface); border-radius:10px; padding:3px; border:1px solid var(--border); }
+  .toggle-group button { background:transparent; border:none; color:var(--text-dim); font-family:var(--font); font-size:13px; font-weight:500; padding:8px 20px; border-radius:8px; cursor:pointer; transition:all 0.2s; }
+  .toggle-group button.active { background:var(--accent); color:#0a0f1a; font-weight:600; }
   .period-nav { display:flex; align-items:center; gap:12px; }
   .period-nav button { background:var(--surface); border:1px solid var(--border); color:var(--text); width:36px; height:36px; border-radius:8px; cursor:pointer; font-size:16px; transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
   .period-nav button:hover { border-color:var(--accent); }
   .period-label { font-family:var(--mono); font-size:14px; font-weight:700; min-width:200px; text-align:center; }
-
+  .filter-group { display:flex; align-items:center; gap:12px; }
   .exclude-toggle { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-dim); }
   .exclude-toggle input { accent-color:var(--accent); width:16px; height:16px; }
-
+  select { background:var(--surface2); border:1px solid var(--border); color:var(--text); font-family:var(--font); font-size:13px; padding:8px 12px; border-radius:8px; }
   .main { padding:0 32px 40px; }
-
+  .tab-content { display:none; } .tab-content.active { display:block; }
   .kpi-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:16px; margin-bottom:28px; }
   .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; position:relative; overflow:hidden; transition:border-color 0.2s; }
   .kpi-card:hover { border-color:var(--accent); }
   .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
-  .kpi-card:nth-child(1)::before { background:var(--accent); }
-  .kpi-card:nth-child(2)::before { background:var(--accent2); }
-  .kpi-card:nth-child(3)::before { background:var(--accent3); }
-  .kpi-card:nth-child(4)::before { background:var(--purple); }
-  .kpi-card:nth-child(5)::before { background:var(--pink); }
-  .kpi-card:nth-child(6)::before { background:#f43f5e; }
+  .kpi-card:nth-child(1)::before{background:var(--accent)} .kpi-card:nth-child(2)::before{background:var(--accent2)} .kpi-card:nth-child(3)::before{background:var(--accent3)} .kpi-card:nth-child(4)::before{background:var(--purple)} .kpi-card:nth-child(5)::before{background:var(--pink)} .kpi-card:nth-child(6)::before{background:#f43f5e}
   .kpi-label { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); margin-bottom:10px; }
   .kpi-value { font-family:var(--mono); font-size:32px; font-weight:700; line-height:1; margin-bottom:8px; }
-  .kpi-change { font-family:var(--mono); font-size:12px; font-weight:700; }
-  .kpi-change.up { color:var(--green); }
-  .kpi-change.down { color:var(--red); }
-  .kpi-change.flat { color:var(--text-dim); }
+  .kpi-change { font-family:var(--mono); font-size:12px; font-weight:700; } .kpi-change.up{color:var(--green)} .kpi-change.down{color:var(--red)} .kpi-change.flat{color:var(--text-dim)}
   .kpi-prev { font-size:11px; color:var(--text-dim); margin-top:2px; }
-
   .charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px; }
-  .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px; }
   .chart-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; }
   .chart-title { font-size:14px; font-weight:600; margin-bottom:16px; }
   .chart-container { position:relative; height:280px; }
-
-  .funnel-stages { display:flex; flex-direction:column; gap:8px; }
-  .funnel-stage { display:flex; align-items:center; gap:10px; }
-  .funnel-stage-name { font-size:12px; font-weight:600; color:var(--text-dim); width:64px; text-align:right; }
-  .funnel-bar-wrap { flex:1; height:38px; background:var(--surface2); border-radius:8px; overflow:hidden; }
-  .funnel-bar { height:100%; border-radius:8px; transition:width 0.6s ease; display:flex; align-items:center; padding-left:12px; min-width:36px; }
-  .funnel-bar-label { font-family:var(--mono); font-size:12px; font-weight:700; color:#0a0f1a; white-space:nowrap; }
-  .funnel-arrow { text-align:center; color:var(--text-dim); font-size:11px; padding-left:74px; font-family:var(--mono); }
-
-  .table-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; overflow-x:auto; }
-  .table-card table { width:100%; border-collapse:collapse; }
-  .table-card th { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); }
-  .table-card td { padding:10px 12px; font-family:var(--mono); font-size:12px; border-bottom:1px solid var(--border); }
-  .table-card tr:last-child td { border-bottom:none; }
-  .table-card tr:hover td { background:var(--surface2); }
-  .mini-bar { display:inline-block; height:6px; border-radius:3px; margin-right:8px; vertical-align:middle; }
-
-  /* Sync overlay */
-  .sync-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(10,15,26,0.85); display:flex; align-items:center; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity 0.3s; }
-  .sync-overlay.show { opacity:1; pointer-events:all; }
-  .sync-modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:32px 40px; max-width:420px; width:90%; text-align:center; }
-  .sync-modal h3 { font-size:16px; margin-bottom:16px; }
-  .sync-progress { font-family:var(--mono); font-size:13px; color:var(--accent); margin-bottom:8px; }
-  .sync-detail { font-size:12px; color:var(--text-dim); margin-bottom:16px; }
-  .sync-bar-track { height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
-  .sync-bar-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.3s; }
-
-  @media(max-width:1100px) { .kpi-grid{grid-template-columns:repeat(3,1fr);} .charts-grid{grid-template-columns:1fr;} .charts-row{grid-template-columns:1fr;} }
-  @media(max-width:700px) { .kpi-grid{grid-template-columns:repeat(2,1fr);} .controls{flex-direction:column;align-items:flex-start;} .topbar,.main,.controls{padding-left:16px;padding-right:16px;} }
+  .funnel-stages{display:flex;flex-direction:column;gap:8px} .funnel-stage{display:flex;align-items:center;gap:10px} .funnel-stage-name{font-size:12px;font-weight:600;color:var(--text-dim);width:64px;text-align:right} .funnel-bar-wrap{flex:1;height:38px;background:var(--surface2);border-radius:8px;overflow:hidden} .funnel-bar{height:100%;border-radius:8px;transition:width .6s ease;display:flex;align-items:center;padding-left:12px;min-width:36px} .funnel-bar-label{font-family:var(--mono);font-size:12px;font-weight:700;color:#0a0f1a;white-space:nowrap} .funnel-arrow{text-align:center;color:var(--text-dim);font-size:11px;padding-left:74px;font-family:var(--mono)}
+  .table-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; overflow-x:auto; margin-bottom:28px; }
+  .table-card table{width:100%;border-collapse:collapse} .table-card th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);text-align:left;padding:10px 12px;border-bottom:1px solid var(--border)} .table-card td{padding:10px 12px;font-family:var(--mono);font-size:12px;border-bottom:1px solid var(--border)} .table-card tr:last-child td{border-bottom:none} .table-card tr:hover td{background:var(--surface2)}
+  .mini-bar{display:inline-block;height:6px;border-radius:3px;margin-right:8px;vertical-align:middle}
+  .spend-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+  .sync-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,15,26,.85);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .3s} .sync-overlay.show{opacity:1;pointer-events:all} .sync-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 40px;max-width:420px;width:90%;text-align:center} .sync-modal h3{font-size:16px;margin-bottom:16px} .sync-progress{font-family:var(--mono);font-size:13px;color:var(--accent);margin-bottom:8px} .sync-detail{font-size:12px;color:var(--text-dim);margin-bottom:16px} .sync-bar-track{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden} .sync-bar-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
+  @media(max-width:1100px){.kpi-grid,.spend-kpi-grid{grid-template-columns:repeat(3,1fr)} .charts-grid{grid-template-columns:1fr}}
+  @media(max-width:700px){.kpi-grid,.spend-kpi-grid{grid-template-columns:repeat(2,1fr)} .controls{flex-direction:column;align-items:flex-start} .topbar,.main,.controls{padding-left:16px;padding-right:16px}}
 </style>
 </head>
 <body>
-
-<div class="topbar">
-  <div class="topbar-left">
-    <div class="logo">Haven Energy</div>
-    <div class="topbar-title">Growth Marketing</div>
-  </div>
-  <div class="topbar-right">
-    <button class="sync-btn" id="syncBtn" onclick="runSync()">⟳ Sync HubSpot</button>
-    <span class="sync-status" id="syncStatus">Loading...</span>
-  </div>
-</div>
-
+<div class="topbar"><div class="topbar-left"><div class="logo">Haven Energy</div><div class="topbar-title">Growth Marketing</div></div><div class="topbar-right"><button class="sync-btn" id="syncBtn" onclick="runSync()">⟳ Sync HubSpot</button><span class="sync-status" id="syncStatus">Loading...</span></div></div>
 <div class="controls">
-  <div class="period-toggle">
-    <button class="active" onclick="setView('weekly')">Weekly</button>
-    <button onclick="setView('monthly')">Monthly</button>
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <div class="toggle-group" id="tabToggle"><button class="active" onclick="setTab('pipeline',this)">Pipeline</button><button onclick="setTab('spend',this)">Spend</button></div>
+    <div class="toggle-group" id="periodToggle"><button class="active" onclick="setView('weekly')">Weekly</button><button onclick="setView('monthly')">Monthly</button></div>
   </div>
-  <div class="period-nav">
-    <button onclick="navigatePeriod(-1)">←</button>
-    <div class="period-label" id="periodLabel">—</div>
-    <button onclick="navigatePeriod(1)">→</button>
-  </div>
-  <label class="exclude-toggle">
-    <input type="checkbox" id="excludePartners" checked onchange="refresh()">
-    Exclude partner sources
-  </label>
+  <div class="period-nav"><button onclick="navigatePeriod(-1)">←</button><div class="period-label" id="periodLabel">—</div><button onclick="navigatePeriod(1)">→</button></div>
+  <div class="filter-group"><select id="sourceFilter" onchange="refresh()"><option value="all">All Sources</option></select><label class="exclude-toggle"><input type="checkbox" id="excludePartners" checked onchange="refresh()"> Exclude partners</label></div>
 </div>
-
 <div class="main">
-  <div class="kpi-grid" id="kpiGrid"></div>
-  <div class="charts-grid">
-    <div class="chart-card">
-      <div class="chart-title">MQLs</div>
-      <div class="chart-container"><canvas id="chartMqls"></canvas></div>
+  <div class="tab-content active" id="tabPipeline">
+    <div class="kpi-grid" id="kpiGrid"></div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-title">MQLs</div><div class="chart-container"><canvas id="chartMqls"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">SQLs</div><div class="chart-container"><canvas id="chartSqls"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Meetings</div><div class="chart-container"><canvas id="chartMtgs"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Sits</div><div class="chart-container"><canvas id="chartSits"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Closes (Created)</div><div class="chart-container"><canvas id="chartClosesCreated"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Closes (Won)</div><div class="chart-container"><canvas id="chartClosesDeal"></canvas></div></div>
     </div>
-    <div class="chart-card">
-      <div class="chart-title">SQLs</div>
-      <div class="chart-container"><canvas id="chartSqls"></canvas></div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-title" id="srcMqlsTitle">MQLs by Source</div><div class="chart-container"><canvas id="srcMqls"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title" id="srcSqlsTitle">SQLs by Source</div><div class="chart-container"><canvas id="srcSqls"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title" id="srcSitsTitle">Sits by Source</div><div class="chart-container"><canvas id="srcSits"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title" id="srcClosesTitle">Closes by Source</div><div class="chart-container"><canvas id="srcCloses"></canvas></div></div>
     </div>
-    <div class="chart-card">
-      <div class="chart-title">Meetings</div>
-      <div class="chart-container"><canvas id="chartMtgs"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Sits</div>
-      <div class="chart-container"><canvas id="chartSits"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Closes (Created)</div>
-      <div class="chart-container"><canvas id="chartClosesCreated"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Closes (Won)</div>
-      <div class="chart-container"><canvas id="chartClosesDeal"></canvas></div>
-    </div>
+    <div class="charts-grid"><div class="chart-card"><div class="chart-title">Conversion Funnel</div><div class="funnel-stages" id="funnel"></div></div></div>
+    <div class="table-card"><div class="chart-title" id="tableTitle">Breakdown by Week</div><table><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table></div>
   </div>
-  <div class="charts-row">
-    <div class="chart-card">
-      <div class="chart-title">Conversion Funnel</div>
-      <div class="funnel-stages" id="funnel"></div>
+  <div class="tab-content" id="tabSpend">
+    <div class="spend-kpi-grid" id="spendKpiGrid"></div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-title">Total Spend</div><div class="chart-container"><canvas id="chartSpend"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Spend by Channel</div><div class="chart-container"><canvas id="chartSpendCh"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Cost per MQL</div><div class="chart-container"><canvas id="chartCPL"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Cost per Sit</div><div class="chart-container"><canvas id="chartCPS"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">CAC (Cost per Close)</div><div class="chart-container"><canvas id="chartCAC"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Channel Spend Trend</div><div class="chart-container"><canvas id="chartChTrend"></canvas></div></div>
     </div>
-  </div>
-  <div class="table-card">
-    <div class="chart-title" id="tableTitle">Breakdown by Week</div>
-    <table><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table>
+    <div class="table-card"><div class="chart-title" id="spendTableTitle">Spend & Unit Economics by Week</div><table><thead id="spendTableHead"></thead><tbody id="spendTableBody"></tbody></table></div>
   </div>
 </div>
-
-<div class="sync-overlay" id="syncOverlay">
-  <div class="sync-modal">
-    <h3>Syncing HubSpot Data</h3>
-    <div class="sync-progress" id="syncProgress">Initializing...</div>
-    <div class="sync-detail" id="syncDetail">This may take a couple of minutes</div>
-    <div class="sync-bar-track"><div class="sync-bar-fill" id="syncBar" style="width:0%"></div></div>
-  </div>
-</div>
+<div class="sync-overlay" id="syncOverlay"><div class="sync-modal"><h3>Syncing HubSpot Data</h3><div class="sync-progress" id="syncProgress">Initializing...</div><div class="sync-detail" id="syncDetail">This may take a couple of minutes</div><div class="sync-bar-track"><div class="sync-bar-fill" id="syncBar" style="width:0%"></div></div></div></div>
 
 <script>
-const SUPABASE_URL = 'https://vnxerxefgodekwjdxfqc.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZueGVyeGVmZ29kZWt3amR4ZnFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1MjY3MjgsImV4cCI6MjA4NDEwMjcyOH0.yV2rEL6PDBW2qjctwsk67-l77miABQ0ssiI6MA2CfEo';
-const FUNC_URL = SUPABASE_URL + '/functions/v1/sync-growth-marketing';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SB_URL='https://vnxerxefgodekwjdxfqc.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZueGVyeGVmZ29kZWt3amR4ZnFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1MjY3MjgsImV4cCI6MjA4NDEwMjcyOH0.yV2rEL6PDBW2qjctwsk67-l77miABQ0ssiI6MA2CfEo';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+const FUNC_URL=SB_URL+'/functions/v1/sync-growth-marketing';
+const PARTNERS=['PCE','CPA','QCS','Self-Generated','CEA','Baker','Skelly Electric','Taylor Energy','California Solar Electric','Blue Sky Center','EPX','SJCE'];
+const CHANNELS=['Direct mail','Meta','Google Paid','Next Door','Capital One','Referrals Program'];
+const CH_COLORS={'Direct mail':'#f59e0b','Meta':'#3b82f6','Google Paid':'#22d3a7','Next Door':'#a855f7','Capital One':'#ec4899','Referrals Program':'#ef4444'};
 
-const PARTNER_SOURCES = ['PCE','CPA','QCS','Self-Generated','CEA','Baker','Skelly Electric','Taylor Energy','California Solar Electric','Blue Sky Center','EPX','SJCE'];
+let contacts=[],meetings=[],viewMode='weekly',periodOffset=0,activeTab='pipeline',charts={};
 
-let contacts = [], meetings = [];
-let viewMode = 'weekly', periodOffset = 0;
-let charts = {};
+// ===== SPEND DATA =====
+const SPEND_RAW=[{"start":"2024-09-09","end":"2024-09-15","source":"Meta","spend":200.0},{"start":"2024-09-16","end":"2024-09-22","source":"Direct mail","spend":13121.92},{"start":"2024-09-16","end":"2024-09-22","source":"Meta","spend":812.14},{"start":"2024-09-23","end":"2024-09-29","source":"Direct mail","spend":9276.75},{"start":"2024-09-23","end":"2024-09-29","source":"Google Paid","spend":6832.6},{"start":"2024-09-23","end":"2024-09-29","source":"Meta","spend":2594.96},{"start":"2024-09-30","end":"2024-10-06","source":"Direct mail","spend":4990.35},{"start":"2024-09-30","end":"2024-10-06","source":"Google Paid","spend":5028.25},{"start":"2024-09-30","end":"2024-10-06","source":"Meta","spend":3919.31},{"start":"2024-09-30","end":"2024-10-06","source":"Next Door","spend":996.0},{"start":"2024-10-07","end":"2024-10-13","source":"Direct mail","spend":18699.15},{"start":"2024-10-07","end":"2024-10-13","source":"Google Paid","spend":2032.89},{"start":"2024-10-07","end":"2024-10-13","source":"Meta","spend":4649.96},{"start":"2024-10-07","end":"2024-10-13","source":"Next Door","spend":1162.0},{"start":"2024-10-14","end":"2024-10-20","source":"Direct mail","spend":4979.9},{"start":"2024-10-14","end":"2024-10-20","source":"Google Paid","spend":2378.79},{"start":"2024-10-14","end":"2024-10-20","source":"Meta","spend":4649.52},{"start":"2024-10-14","end":"2024-10-20","source":"Next Door","spend":3298.0},{"start":"2024-10-21","end":"2024-10-27","source":"Direct mail","spend":4990.35},{"start":"2024-10-21","end":"2024-10-27","source":"Google Paid","spend":2314.9},{"start":"2024-10-21","end":"2024-10-27","source":"Meta","spend":3893.67},{"start":"2024-10-21","end":"2024-10-27","source":"Next Door","spend":3778.68},{"start":"2024-10-28","end":"2024-11-03","source":"Direct mail","spend":4896.3},{"start":"2024-10-28","end":"2024-11-03","source":"Google Paid","spend":2209.93},{"start":"2024-10-28","end":"2024-11-03","source":"Meta","spend":2314.15},{"start":"2024-10-28","end":"2024-11-03","source":"Next Door","spend":1522.61},{"start":"2024-11-04","end":"2024-11-10","source":"Google Paid","spend":2303.76},{"start":"2024-11-04","end":"2024-11-10","source":"Meta","spend":2687.41},{"start":"2024-11-04","end":"2024-11-10","source":"Next Door","spend":2660.8},{"start":"2024-11-11","end":"2024-11-17","source":"Google Paid","spend":2378.71},{"start":"2024-11-11","end":"2024-11-17","source":"Meta","spend":3361.62},{"start":"2024-11-11","end":"2024-11-17","source":"Next Door","spend":2008.89},{"start":"2024-11-18","end":"2024-11-24","source":"Google Paid","spend":2248.98},{"start":"2024-11-18","end":"2024-11-24","source":"Meta","spend":3378.19},{"start":"2024-11-18","end":"2024-11-24","source":"Next Door","spend":1752.42},{"start":"2024-11-25","end":"2024-12-01","source":"Google Paid","spend":2096.26},{"start":"2024-11-25","end":"2024-12-01","source":"Meta","spend":4623.97},{"start":"2024-11-25","end":"2024-12-01","source":"Next Door","spend":2160.0},{"start":"2024-12-02","end":"2024-12-08","source":"Direct mail","spend":4896.17},{"start":"2024-12-02","end":"2024-12-08","source":"Google Paid","spend":2829.92},{"start":"2024-12-02","end":"2024-12-08","source":"Meta","spend":4809.4},{"start":"2024-12-02","end":"2024-12-08","source":"Next Door","spend":2369.95},{"start":"2024-12-09","end":"2024-12-15","source":"Direct mail","spend":4922.73},{"start":"2024-12-09","end":"2024-12-15","source":"Google Paid","spend":9240.11},{"start":"2024-12-09","end":"2024-12-15","source":"Meta","spend":6744.22},{"start":"2024-12-09","end":"2024-12-15","source":"Next Door","spend":2240.0},{"start":"2024-12-16","end":"2024-12-22","source":"Direct mail","spend":4942.65},{"start":"2024-12-16","end":"2024-12-22","source":"Google Paid","spend":9510.96},{"start":"2024-12-16","end":"2024-12-22","source":"Meta","spend":6538.41},{"start":"2024-12-16","end":"2024-12-22","source":"Next Door","spend":1920.0},{"start":"2024-12-23","end":"2024-12-29","source":"Google Paid","spend":2835.48},{"start":"2024-12-23","end":"2024-12-29","source":"Meta","spend":2777.12},{"start":"2024-12-23","end":"2024-12-29","source":"Next Door","spend":1008.0},{"start":"2024-12-30","end":"2025-01-05","source":"Google Paid","spend":2479.59},{"start":"2024-12-30","end":"2025-01-05","source":"Meta","spend":2492.68},{"start":"2024-12-30","end":"2025-01-05","source":"Next Door","spend":1008.0},{"start":"2025-01-06","end":"2025-01-12","source":"Direct mail","spend":11123.66},{"start":"2025-01-06","end":"2025-01-12","source":"Google Paid","spend":3554.82},{"start":"2025-01-06","end":"2025-01-12","source":"Meta","spend":2992.66},{"start":"2025-01-06","end":"2025-01-12","source":"Next Door","spend":2240.0},{"start":"2025-01-06","end":"2025-01-12","source":"Referrals Program","spend":300.0},{"start":"2025-01-13","end":"2025-01-19","source":"Direct mail","spend":12127.13},{"start":"2025-01-13","end":"2025-01-19","source":"Google Paid","spend":4298.31},{"start":"2025-01-13","end":"2025-01-19","source":"Meta","spend":3485.09},{"start":"2025-01-13","end":"2025-01-19","source":"Next Door","spend":2240.0},{"start":"2025-01-13","end":"2025-01-19","source":"Referrals Program","spend":300.0},{"start":"2025-01-20","end":"2025-01-26","source":"Direct mail","spend":10866.36},{"start":"2025-01-20","end":"2025-01-26","source":"Google Paid","spend":5983.51},{"start":"2025-01-20","end":"2025-01-26","source":"Meta","spend":4297.45},{"start":"2025-01-20","end":"2025-01-26","source":"Next Door","spend":486.47},{"start":"2025-01-27","end":"2025-02-02","source":"Direct mail","spend":9811.43},{"start":"2025-01-27","end":"2025-02-02","source":"Google Paid","spend":9449.21},{"start":"2025-01-27","end":"2025-02-02","source":"Meta","spend":5313.89},{"start":"2025-01-27","end":"2025-02-02","source":"Next Door","spend":700.0},{"start":"2025-02-03","end":"2025-02-09","source":"Direct mail","spend":17120.41},{"start":"2025-02-03","end":"2025-02-09","source":"Google Paid","spend":8447.43},{"start":"2025-02-03","end":"2025-02-09","source":"Meta","spend":3625.0},{"start":"2025-02-03","end":"2025-02-09","source":"Next Door","spend":2450.0},{"start":"2025-02-10","end":"2025-02-16","source":"Direct mail","spend":17633.35},{"start":"2025-02-10","end":"2025-02-16","source":"Google Paid","spend":8271.15},{"start":"2025-02-10","end":"2025-02-16","source":"Meta","spend":4855.04},{"start":"2025-02-10","end":"2025-02-16","source":"Next Door","spend":923.1},{"start":"2025-02-17","end":"2025-02-23","source":"Capital One","spend":9000.0},{"start":"2025-02-17","end":"2025-02-23","source":"Direct mail","spend":8928.31},{"start":"2025-02-17","end":"2025-02-23","source":"Google Paid","spend":8289.38},{"start":"2025-02-17","end":"2025-02-23","source":"Meta","spend":4195.82},{"start":"2025-02-24","end":"2025-03-02","source":"Capital One","spend":3000.0},{"start":"2025-02-24","end":"2025-03-02","source":"Direct mail","spend":8926.65},{"start":"2025-02-24","end":"2025-03-02","source":"Google Paid","spend":7847.19},{"start":"2025-02-24","end":"2025-03-02","source":"Meta","spend":4233.14},{"start":"2025-03-03","end":"2025-03-09","source":"Capital One","spend":1000.0},{"start":"2025-03-03","end":"2025-03-09","source":"Direct mail","spend":9809.77},{"start":"2025-03-03","end":"2025-03-09","source":"Google Paid","spend":8814.3},{"start":"2025-03-03","end":"2025-03-09","source":"Meta","spend":4120.79},{"start":"2025-03-03","end":"2025-03-09","source":"Next Door","spend":1144.0},{"start":"2025-03-10","end":"2025-03-16","source":"Capital One","spend":2000.0},{"start":"2025-03-10","end":"2025-03-16","source":"Direct mail","spend":23335.18},{"start":"2025-03-10","end":"2025-03-16","source":"Google Paid","spend":8838.45},{"start":"2025-03-10","end":"2025-03-16","source":"Meta","spend":4246.26},{"start":"2025-03-10","end":"2025-03-16","source":"Next Door","spend":2002.0},{"start":"2025-03-10","end":"2025-03-16","source":"Referrals Program","spend":300.0},{"start":"2025-03-17","end":"2025-03-23","source":"Capital One","spend":3000.0},{"start":"2025-03-17","end":"2025-03-23","source":"Direct mail","spend":14255.11},{"start":"2025-03-17","end":"2025-03-23","source":"Google Paid","spend":6111.89},{"start":"2025-03-17","end":"2025-03-23","source":"Meta","spend":4088.02},{"start":"2025-03-17","end":"2025-03-23","source":"Next Door","spend":2002.0},{"start":"2025-03-24","end":"2025-03-30","source":"Direct mail","spend":9506.23},{"start":"2025-03-24","end":"2025-03-30","source":"Google Paid","spend":3945.02},{"start":"2025-03-24","end":"2025-03-30","source":"Meta","spend":4356.35},{"start":"2025-03-24","end":"2025-03-30","source":"Next Door","spend":2002.0},{"start":"2025-03-31","end":"2025-04-06","source":"Direct mail","spend":7864.12},{"start":"2025-03-31","end":"2025-04-06","source":"Google Paid","spend":5659.8},{"start":"2025-03-31","end":"2025-04-06","source":"Meta","spend":5861.97},{"start":"2025-03-31","end":"2025-04-06","source":"Next Door","spend":463.04},{"start":"2025-04-07","end":"2025-04-13","source":"Direct mail","spend":13276.07},{"start":"2025-04-07","end":"2025-04-13","source":"Google Paid","spend":6938.33},{"start":"2025-04-07","end":"2025-04-13","source":"Meta","spend":6235.25},{"start":"2025-04-07","end":"2025-04-13","source":"Referrals Program","spend":150.0},{"start":"2025-04-14","end":"2025-04-20","source":"Capital One","spend":1000.0},{"start":"2025-04-14","end":"2025-04-20","source":"Direct mail","spend":7030.8},{"start":"2025-04-14","end":"2025-04-20","source":"Google Paid","spend":6601.7},{"start":"2025-04-14","end":"2025-04-20","source":"Meta","spend":5604.58},{"start":"2025-04-21","end":"2025-04-27","source":"Direct mail","spend":12143.3},{"start":"2025-04-21","end":"2025-04-27","source":"Google Paid","spend":6320.8},{"start":"2025-04-21","end":"2025-04-27","source":"Meta","spend":5555.4},{"start":"2025-04-21","end":"2025-04-27","source":"Referrals Program","spend":150.0},{"start":"2025-04-28","end":"2025-05-04","source":"Capital One","spend":2000.0},{"start":"2025-04-28","end":"2025-05-04","source":"Direct mail","spend":11124.61},{"start":"2025-04-28","end":"2025-05-04","source":"Google Paid","spend":5549.72},{"start":"2025-04-28","end":"2025-05-04","source":"Meta","spend":5298.72},{"start":"2025-04-28","end":"2025-05-04","source":"Referrals Program","spend":600.0},{"start":"2025-05-05","end":"2025-05-11","source":"Capital One","spend":8000.0},{"start":"2025-05-05","end":"2025-05-11","source":"Direct mail","spend":10778.57},{"start":"2025-05-05","end":"2025-05-11","source":"Google Paid","spend":5648.18},{"start":"2025-05-05","end":"2025-05-11","source":"Meta","spend":3706.19},{"start":"2025-05-05","end":"2025-05-11","source":"Referrals Program","spend":600.0},{"start":"2025-05-12","end":"2025-05-18","source":"Capital One","spend":1000.0},{"start":"2025-05-12","end":"2025-05-18","source":"Direct mail","spend":6813.29},{"start":"2025-05-12","end":"2025-05-18","source":"Google Paid","spend":6493.2},{"start":"2025-05-12","end":"2025-05-18","source":"Meta","spend":4277.61},{"start":"2025-05-12","end":"2025-05-18","source":"Referrals Program","spend":450.0},{"start":"2025-05-19","end":"2025-05-25","source":"Capital One","spend":4000.0},{"start":"2025-05-19","end":"2025-05-25","source":"Direct mail","spend":11623.58},{"start":"2025-05-19","end":"2025-05-25","source":"Google Paid","spend":4710.67},{"start":"2025-05-19","end":"2025-05-25","source":"Meta","spend":6571.62},{"start":"2025-05-19","end":"2025-05-25","source":"Referrals Program","spend":600.0},{"start":"2025-05-26","end":"2025-06-01","source":"Capital One","spend":2000.0},{"start":"2025-05-26","end":"2025-06-01","source":"Direct mail","spend":9705.61},{"start":"2025-05-26","end":"2025-06-01","source":"Google Paid","spend":8075.03},{"start":"2025-05-26","end":"2025-06-01","source":"Meta","spend":7356.31},{"start":"2025-05-26","end":"2025-06-01","source":"Referrals Program","spend":300.0},{"start":"2025-06-02","end":"2025-06-08","source":"Capital One","spend":2000.0},{"start":"2025-06-02","end":"2025-06-08","source":"Direct mail","spend":8939.31},{"start":"2025-06-02","end":"2025-06-08","source":"Google Paid","spend":7488.31},{"start":"2025-06-02","end":"2025-06-08","source":"Meta","spend":7248.23},{"start":"2025-06-02","end":"2025-06-08","source":"Referrals Program","spend":150.0},{"start":"2025-06-09","end":"2025-06-15","source":"Direct mail","spend":22502.41},{"start":"2025-06-09","end":"2025-06-15","source":"Google Paid","spend":5904.49},{"start":"2025-06-09","end":"2025-06-15","source":"Meta","spend":7331.47},{"start":"2025-06-09","end":"2025-06-15","source":"Referrals Program","spend":600.0},{"start":"2025-06-16","end":"2025-06-22","source":"Direct mail","spend":26263.45},{"start":"2025-06-16","end":"2025-06-22","source":"Google Paid","spend":5377.15},{"start":"2025-06-16","end":"2025-06-22","source":"Meta","spend":5361.61},{"start":"2025-06-16","end":"2025-06-22","source":"Referrals Program","spend":300.0},{"start":"2025-06-23","end":"2025-06-29","source":"Direct mail","spend":22297.06},{"start":"2025-06-23","end":"2025-06-29","source":"Google Paid","spend":6242.76},{"start":"2025-06-23","end":"2025-06-29","source":"Meta","spend":2995.15},{"start":"2025-06-23","end":"2025-06-29","source":"Referrals Program","spend":750.0},{"start":"2025-06-30","end":"2025-07-06","source":"Direct mail","spend":11485.2},{"start":"2025-06-30","end":"2025-07-06","source":"Google Paid","spend":5159.98},{"start":"2025-06-30","end":"2025-07-06","source":"Meta","spend":2681.21},{"start":"2025-06-30","end":"2025-07-06","source":"Referrals Program","spend":1500.0},{"start":"2025-07-07","end":"2025-07-13","source":"Capital One","spend":3000.0},{"start":"2025-07-07","end":"2025-07-13","source":"Direct mail","spend":11417.67},{"start":"2025-07-07","end":"2025-07-13","source":"Google Paid","spend":3959.28},{"start":"2025-07-07","end":"2025-07-13","source":"Meta","spend":2793.36},{"start":"2025-07-14","end":"2025-07-20","source":"Direct mail","spend":11335.2},{"start":"2025-07-14","end":"2025-07-20","source":"Google Paid","spend":8804.91},{"start":"2025-07-14","end":"2025-07-20","source":"Meta","spend":2895.09},{"start":"2025-07-14","end":"2025-07-20","source":"Referrals Program","spend":1650.0},{"start":"2025-07-21","end":"2025-07-27","source":"Capital One","spend":13000.0},{"start":"2025-07-21","end":"2025-07-27","source":"Direct mail","spend":11579.97},{"start":"2025-07-21","end":"2025-07-27","source":"Google Paid","spend":6525.26},{"start":"2025-07-21","end":"2025-07-27","source":"Meta","spend":2900.83},{"start":"2025-07-21","end":"2025-07-27","source":"Referrals Program","spend":500.0},{"start":"2025-07-28","end":"2025-08-03","source":"Capital One","spend":2000.0},{"start":"2025-07-28","end":"2025-08-03","source":"Direct mail","spend":11968.02},{"start":"2025-07-28","end":"2025-08-03","source":"Google Paid","spend":5746.83},{"start":"2025-07-28","end":"2025-08-03","source":"Meta","spend":2911.2},{"start":"2025-07-28","end":"2025-08-03","source":"Referrals Program","spend":500.0},{"start":"2025-08-04","end":"2025-08-10","source":"Direct mail","spend":13614.54},{"start":"2025-08-04","end":"2025-08-10","source":"Google Paid","spend":7924.3},{"start":"2025-08-04","end":"2025-08-10","source":"Meta","spend":2929.78},{"start":"2025-08-04","end":"2025-08-10","source":"Referrals Program","spend":2000.0},{"start":"2025-08-11","end":"2025-08-17","source":"Direct mail","spend":26629.05},{"start":"2025-08-11","end":"2025-08-17","source":"Google Paid","spend":8200.81},{"start":"2025-08-11","end":"2025-08-17","source":"Meta","spend":2901.51},{"start":"2025-08-11","end":"2025-08-17","source":"Referrals Program","spend":1500.0},{"start":"2025-08-18","end":"2025-08-24","source":"Capital One","spend":2000.0},{"start":"2025-08-18","end":"2025-08-24","source":"Direct mail","spend":28280.76},{"start":"2025-08-18","end":"2025-08-24","source":"Google Paid","spend":8499.51},{"start":"2025-08-18","end":"2025-08-24","source":"Meta","spend":2921.28},{"start":"2025-08-18","end":"2025-08-24","source":"Referrals Program","spend":2000.0},{"start":"2025-08-25","end":"2025-08-31","source":"Capital One","spend":1000.0},{"start":"2025-08-25","end":"2025-08-31","source":"Direct mail","spend":24685.17},{"start":"2025-08-25","end":"2025-08-31","source":"Google Paid","spend":5984.93},{"start":"2025-08-25","end":"2025-08-31","source":"Meta","spend":3305.03},{"start":"2025-08-25","end":"2025-08-31","source":"Referrals Program","spend":450.0},{"start":"2025-09-01","end":"2025-09-07","source":"Capital One","spend":4000.0},{"start":"2025-09-01","end":"2025-09-07","source":"Direct mail","spend":12401.49},{"start":"2025-09-01","end":"2025-09-07","source":"Google Paid","spend":6518.35},{"start":"2025-09-01","end":"2025-09-07","source":"Meta","spend":3755.95},{"start":"2025-09-01","end":"2025-09-07","source":"Referrals Program","spend":450.0},{"start":"2025-09-08","end":"2025-09-14","source":"Capital One","spend":1000.0},{"start":"2025-09-08","end":"2025-09-14","source":"Direct mail","spend":11136.06},{"start":"2025-09-08","end":"2025-09-14","source":"Google Paid","spend":7860.81},{"start":"2025-09-08","end":"2025-09-14","source":"Meta","spend":4894.95},{"start":"2025-09-08","end":"2025-09-14","source":"Referrals Program","spend":300.0},{"start":"2025-09-15","end":"2025-09-21","source":"Direct mail","spend":16477.34},{"start":"2025-09-15","end":"2025-09-21","source":"Google Paid","spend":9927.77},{"start":"2025-09-15","end":"2025-09-21","source":"Meta","spend":4693.73},{"start":"2025-09-15","end":"2025-09-21","source":"Referrals Program","spend":450.0},{"start":"2025-09-22","end":"2025-09-28","source":"Capital One","spend":4000.0},{"start":"2025-09-22","end":"2025-09-28","source":"Direct mail","spend":22747.16},{"start":"2025-09-22","end":"2025-09-28","source":"Google Paid","spend":11601.67},{"start":"2025-09-22","end":"2025-09-28","source":"Meta","spend":4850.46},{"start":"2025-09-22","end":"2025-09-28","source":"Referrals Program","spend":300.0},{"start":"2025-09-29","end":"2025-10-05","source":"Direct mail","spend":25363.86},{"start":"2025-09-29","end":"2025-10-05","source":"Google Paid","spend":10862.58},{"start":"2025-09-29","end":"2025-10-05","source":"Meta","spend":5180.85},{"start":"2025-09-29","end":"2025-10-05","source":"Referrals Program","spend":500.0},{"start":"2025-10-06","end":"2025-10-12","source":"Direct mail","spend":22576.92},{"start":"2025-10-06","end":"2025-10-12","source":"Google Paid","spend":9638.95},{"start":"2025-10-06","end":"2025-10-12","source":"Meta","spend":5927.31},{"start":"2025-10-13","end":"2025-10-19","source":"Capital One","spend":1000.0},{"start":"2025-10-13","end":"2025-10-19","source":"Direct mail","spend":27295.95},{"start":"2025-10-13","end":"2025-10-19","source":"Google Paid","spend":13834.67},{"start":"2025-10-13","end":"2025-10-19","source":"Meta","spend":6717.06},{"start":"2025-10-13","end":"2025-10-19","source":"Referrals Program","spend":1500.0},{"start":"2025-10-20","end":"2025-10-26","source":"Direct mail","spend":76466.48},{"start":"2025-10-20","end":"2025-10-26","source":"Google Paid","spend":8263.61},{"start":"2025-10-20","end":"2025-10-26","source":"Meta","spend":6787.33},{"start":"2025-10-27","end":"2025-11-02","source":"Capital One","spend":1000.0},{"start":"2025-10-27","end":"2025-11-02","source":"Direct mail","spend":74607.96},{"start":"2025-10-27","end":"2025-11-02","source":"Google Paid","spend":7933.31},{"start":"2025-10-27","end":"2025-11-02","source":"Meta","spend":6799.09},{"start":"2025-10-27","end":"2025-11-02","source":"Referrals Program","spend":2000.0},{"start":"2025-11-03","end":"2025-11-09","source":"Capital One","spend":1000.0},{"start":"2025-11-03","end":"2025-11-09","source":"Direct mail","spend":59746.05},{"start":"2025-11-03","end":"2025-11-09","source":"Google Paid","spend":10593.96},{"start":"2025-11-03","end":"2025-11-09","source":"Meta","spend":6020.61},{"start":"2025-11-10","end":"2025-11-16","source":"Capital One","spend":2000.0},{"start":"2025-11-10","end":"2025-11-16","source":"Direct mail","spend":56027.7},{"start":"2025-11-10","end":"2025-11-16","source":"Google Paid","spend":4674.01},{"start":"2025-11-10","end":"2025-11-16","source":"Meta","spend":7446.18},{"start":"2025-11-10","end":"2025-11-16","source":"Referrals Program","spend":1000.0},{"start":"2025-11-17","end":"2025-11-23","source":"Direct mail","spend":40120.98},{"start":"2025-11-17","end":"2025-11-23","source":"Google Paid","spend":3924.25},{"start":"2025-11-17","end":"2025-11-23","source":"Meta","spend":6857.9},{"start":"2025-11-24","end":"2025-11-30","source":"Direct mail","spend":80368.17},{"start":"2025-11-24","end":"2025-11-30","source":"Google Paid","spend":3170.04},{"start":"2025-11-24","end":"2025-11-30","source":"Meta","spend":2678.54},{"start":"2025-12-01","end":"2025-12-07","source":"Capital One","spend":2000.0},{"start":"2025-12-01","end":"2025-12-07","source":"Direct mail","spend":57864.3},{"start":"2025-12-01","end":"2025-12-07","source":"Google Paid","spend":3855.4},{"start":"2025-12-01","end":"2025-12-07","source":"Meta","spend":2733.43},{"start":"2025-12-08","end":"2025-12-14","source":"Capital One","spend":2000.0},{"start":"2025-12-08","end":"2025-12-14","source":"Direct mail","spend":82925.94},{"start":"2025-12-08","end":"2025-12-14","source":"Google Paid","spend":6649.48},{"start":"2025-12-08","end":"2025-12-14","source":"Meta","spend":3527.64},{"start":"2025-12-15","end":"2025-12-21","source":"Capital One","spend":2000.0},{"start":"2025-12-15","end":"2025-12-21","source":"Direct mail","spend":98663.35},{"start":"2025-12-15","end":"2025-12-21","source":"Google Paid","spend":3016.2},{"start":"2025-12-15","end":"2025-12-21","source":"Meta","spend":1924.88},{"start":"2025-12-22","end":"2025-12-28","source":"Capital One","spend":1000.0},{"start":"2025-12-22","end":"2025-12-28","source":"Direct mail","spend":2775.0},{"start":"2025-12-29","end":"2025-12-31","source":"Direct mail","spend":600.0},{"start":"2026-01-19","end":"2026-01-25","source":"Direct mail","spend":10795.08},{"start":"2026-01-19","end":"2026-01-25","source":"Google Paid","spend":614.41},{"start":"2026-01-19","end":"2026-01-25","source":"Meta","spend":748.13},{"start":"2026-01-26","end":"2026-02-01","source":"Direct mail","spend":10991.04},{"start":"2026-01-26","end":"2026-02-01","source":"Google Paid","spend":1454.73},{"start":"2026-01-26","end":"2026-02-01","source":"Meta","spend":794.42},{"start":"2026-02-02","end":"2026-02-08","source":"Direct mail","spend":10582.68},{"start":"2026-02-02","end":"2026-02-08","source":"Google Paid","spend":1481.16},{"start":"2026-02-02","end":"2026-02-08","source":"Meta","spend":3795.79},{"start":"2026-02-09","end":"2026-02-15","source":"Direct mail","spend":36760.11},{"start":"2026-02-09","end":"2026-02-15","source":"Google Paid","spend":1584.18},{"start":"2026-02-09","end":"2026-02-15","source":"Meta","spend":5473.09}];
 
-// ========== DATA LOADING ==========
-async function loadData() {
-  document.getElementById('syncStatus').textContent = 'Loading...';
-  let allC = [], allM = [], from = 0;
-  while (true) {
-    const { data } = await sb.from('growth_contacts').select('*').range(from, from + 999);
-    if (!data || data.length === 0) break;
-    allC = allC.concat(data);
-    if (data.length < 1000) break;
-    from += 1000;
-  }
-  from = 0;
-  while (true) {
-    const { data } = await sb.from('growth_meetings').select('*').range(from, from + 999);
-    if (!data || data.length === 0) break;
-    allM = allM.concat(data);
-    if (data.length < 1000) break;
-    from += 1000;
-  }
-  contacts = allC;
-  meetings = allM;
-  document.getElementById('syncStatus').textContent = `${contacts.length.toLocaleString()} contacts · ${meetings.length.toLocaleString()} meetings`;
-  refresh();
+// ===== DATA LOADING =====
+async function loadData(){
+  document.getElementById('syncStatus').textContent='Loading...';
+  let allC=[],allM=[],from=0;
+  while(true){const{data}=await sb.from('growth_contacts').select('*').range(from,from+999);if(!data||!data.length)break;allC=allC.concat(data);if(data.length<1000)break;from+=1000;}
+  from=0;
+  while(true){const{data}=await sb.from('growth_meetings').select('*').range(from,from+999);if(!data||!data.length)break;allM=allM.concat(data);if(data.length<1000)break;from+=1000;}
+  contacts=allC;meetings=allM;
+  document.getElementById('syncStatus').textContent=`${contacts.length.toLocaleString()} contacts · ${meetings.length.toLocaleString()} meetings`;
+  populateSourceFilter();refresh();
+}
+function populateSourceFilter(){
+  const s=new Set();contacts.forEach(c=>{if(c.attributed_source)s.add(c.attributed_source)});
+  const sel=document.getElementById('sourceFilter');
+  sel.innerHTML='<option value="all">All Sources</option>'+[...s].sort().map(v=>`<option value="${v}">${v}</option>`).join('');
 }
 
-// ========== SYNC ==========
-async function callFunc(body) {
-  const res = await fetch(FUNC_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
-    body: JSON.stringify(body)
-  });
-  return res.json();
+// ===== SYNC =====
+async function callFunc(b){return(await fetch(FUNC_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},body:JSON.stringify(b)})).json()}
+async function runSync(){
+  const btn=document.getElementById('syncBtn'),ov=document.getElementById('syncOverlay'),pr=document.getElementById('syncProgress'),dt=document.getElementById('syncDetail'),bar=document.getElementById('syncBar');
+  btn.classList.add('syncing');btn.disabled=true;ov.classList.add('show');
+  try{
+    pr.textContent='Step 1/3: Fetching contact list...';dt.textContent='Getting contact IDs';bar.style.width='10%';
+    const lr=await callFunc({step:'list'});if(!lr.success)throw new Error(lr.error);
+    const tot=lr.contact_ids_fetched||0;pr.textContent=`Step 2/3: Syncing ${tot.toLocaleString()} contacts...`;bar.style.width='20%';
+    let bs=0,ts=0,done=false;
+    while(!done){dt.textContent=`Batch ${bs.toLocaleString()}/${tot.toLocaleString()}`;bar.style.width=(20+(bs/Math.max(tot,1))*50)+'%';
+      const cr=await callFunc({step:'contacts',batch_start:bs});if(!cr.success)throw new Error(cr.error);ts+=cr.contacts_synced||0;done=cr.complete;
+      if(!done){const m=cr.progress?.match(/^(\d+)/);bs=m?parseInt(m[1]):bs+10000;}}
+    pr.textContent='Step 3/3: Syncing meetings...';dt.textContent=`${ts.toLocaleString()} contacts done`;bar.style.width='80%';
+    const mr=await callFunc({step:'meetings'});bar.style.width='100%';pr.textContent='Sync complete!';
+    dt.textContent=`${ts.toLocaleString()} contacts · ${(mr.meetings_synced||0).toLocaleString()} meetings`;
+    await new Promise(r=>setTimeout(r,1500));await loadData();
+  }catch(e){pr.textContent='Sync error';dt.textContent=e.message;await new Promise(r=>setTimeout(r,3000));}
+  finally{ov.classList.remove('show');btn.classList.remove('syncing');btn.disabled=false;bar.style.width='0%';}
 }
 
-async function runSync() {
-  const btn = document.getElementById('syncBtn');
-  const overlay = document.getElementById('syncOverlay');
-  const progress = document.getElementById('syncProgress');
-  const detail = document.getElementById('syncDetail');
-  const bar = document.getElementById('syncBar');
+// ===== PERIOD UTILS =====
+function getWeekStart(d){const dt=new Date(d);const day=dt.getUTCDay();const diff=day===0?-6:1-day;dt.setUTCDate(dt.getUTCDate()+diff);return new Date(Date.UTC(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate()))}
+function getPeriodKey(date){const d=new Date(date);if(viewMode==='weekly'){return getWeekStart(d).toISOString().split('T')[0]}return`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`}
+function getCurrentPeriodKey(){const now=new Date();if(viewMode==='weekly'){const ws=getWeekStart(now);ws.setUTCDate(ws.getUTCDate()+periodOffset*7);return ws.toISOString().split('T')[0]}const m=now.getUTCMonth()+periodOffset;const y=now.getUTCFullYear()+Math.floor(m/12);const mo=((m%12)+12)%12;return`${y}-${String(mo+1).padStart(2,'0')}`}
+function getPrevKey(k){if(viewMode==='weekly'){const d=new Date(k+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-7);return d.toISOString().split('T')[0]}const[y,m]=k.split('-').map(Number);return m-1<1?`${y-1}-12`:`${y}-${String(m-1).padStart(2,'0')}`}
+function formatPeriod(k){if(viewMode==='weekly'){const d=new Date(k+'T00:00:00Z');const e=new Date(d);e.setUTCDate(e.getUTCDate()+6);const o={month:'short',day:'numeric',timeZone:'UTC'};return`${d.toLocaleDateString('en-US',o)} – ${e.toLocaleDateString('en-US',o)}, ${d.getUTCFullYear()}`}const[y,m]=k.split('-');return new Date(Date.UTC(y,m-1,1)).toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'})}
+function formatShort(k){if(viewMode==='weekly'){return new Date(k+'T00:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})}const[y,m]=k.split('-');return new Date(Date.UTC(y,m-1,1)).toLocaleDateString('en-US',{month:'short',year:'2-digit',timeZone:'UTC'})}
 
-  btn.classList.add('syncing');
-  btn.disabled = true;
-  overlay.classList.add('show');
-
-  try {
-    // Step 1: Fetch list
-    progress.textContent = 'Step 1/3: Fetching contact list...';
-    detail.textContent = 'Getting contact IDs from HubSpot list';
-    bar.style.width = '10%';
-
-    const listResult = await callFunc({ step: 'list' });
-    if (!listResult.success) throw new Error(listResult.error || 'List step failed');
-
-    const totalIds = listResult.contact_ids_fetched || 0;
-    progress.textContent = `Step 2/3: Syncing ${totalIds.toLocaleString()} contacts...`;
-    bar.style.width = '20%';
-
-    // Step 2: Batch contacts
-    let batchStart = 0;
-    let totalSynced = 0;
-    let complete = false;
-
-    while (!complete) {
-      detail.textContent = `Processing batch ${batchStart.toLocaleString()} / ${totalIds.toLocaleString()}`;
-      const pct = 20 + (batchStart / Math.max(totalIds, 1)) * 50;
-      bar.style.width = pct + '%';
-
-      const contactResult = await callFunc({ step: 'contacts', batch_start: batchStart });
-      if (!contactResult.success) throw new Error(contactResult.error || 'Contacts step failed');
-
-      totalSynced += contactResult.contacts_synced || 0;
-      complete = contactResult.complete;
-
-      if (!complete) {
-        // Parse next batch_start from progress
-        const match = contactResult.progress?.match(/^(\d+)/);
-        batchStart = match ? parseInt(match[1]) : batchStart + 10000;
-      }
-    }
-
-    progress.textContent = `Step 3/3: Syncing meetings...`;
-    detail.textContent = `${totalSynced.toLocaleString()} contacts done, now fetching meetings`;
-    bar.style.width = '80%';
-
-    // Step 3: Meetings
-    const meetResult = await callFunc({ step: 'meetings' });
-
-    bar.style.width = '100%';
-    progress.textContent = 'Sync complete!';
-    detail.textContent = `${totalSynced.toLocaleString()} contacts · ${(meetResult.meetings_synced || 0).toLocaleString()} meetings`;
-
-    await new Promise(r => setTimeout(r, 1500));
-
-    // Reload data
-    await loadData();
-
-  } catch (err) {
-    progress.textContent = 'Sync error';
-    detail.textContent = err.message;
-    await new Promise(r => setTimeout(r, 3000));
-  } finally {
-    overlay.classList.remove('show');
-    btn.classList.remove('syncing');
-    btn.disabled = false;
-    bar.style.width = '0%';
-  }
+// ===== FILTERING =====
+function filterC(list){
+  let f=list;
+  if(document.getElementById('excludePartners').checked)f=f.filter(c=>!PARTNERS.includes(c.attributed_source));
+  const sv=document.getElementById('sourceFilter').value;
+  if(sv!=='all')f=f.filter(c=>c.attributed_source===sv);
+  return f;
 }
 
-// ========== PERIOD UTILS ==========
-function getWeekStart(d) { const dt=new Date(d); const day=dt.getUTCDay(); const diff=day===0?-6:1-day; dt.setUTCDate(dt.getUTCDate()+diff); return new Date(Date.UTC(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate())); }
-function getPeriodKey(date) {
-  const d=new Date(date);
-  if(viewMode==='weekly'){const ws=getWeekStart(d);return ws.toISOString().split('T')[0];}
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
-}
-function getCurrentPeriodKey() {
-  const now=new Date();
-  if(viewMode==='weekly'){const ws=getWeekStart(now);ws.setUTCDate(ws.getUTCDate()+periodOffset*7);return ws.toISOString().split('T')[0];}
-  const m=now.getUTCMonth()+periodOffset;const y=now.getUTCFullYear()+Math.floor(m/12);const mo=((m%12)+12)%12;
-  return `${y}-${String(mo+1).padStart(2,'0')}`;
-}
-function getPrevKey(k) {
-  if(viewMode==='weekly'){const d=new Date(k+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-7);return d.toISOString().split('T')[0];}
-  const[y,m]=k.split('-').map(Number);const nm=m-1;const ny=nm<1?y-1:y;const mo=nm<1?12:nm;return `${ny}-${String(mo).padStart(2,'0')}`;
-}
-function formatPeriod(k) {
-  if(viewMode==='weekly'){const d=new Date(k+'T00:00:00Z');const e=new Date(d);e.setUTCDate(e.getUTCDate()+6);const o={month:'short',day:'numeric',timeZone:'UTC'};return `${d.toLocaleDateString('en-US',o)} – ${e.toLocaleDateString('en-US',o)}, ${d.getUTCFullYear()}`;}
-  const[y,m]=k.split('-');return new Date(Date.UTC(y,m-1,1)).toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'});
-}
-function formatShort(k) {
-  if(viewMode==='weekly'){const d=new Date(k+'T00:00:00Z');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});}
-  const[y,m]=k.split('-');return new Date(Date.UTC(y,m-1,1)).toLocaleDateString('en-US',{month:'short',year:'2-digit',timeZone:'UTC'});
-}
+// ===== PIPELINE METRICS =====
+const MQL_S=['marketingqualifiedlead','salesqualifiedlead','opportunity','99994170','customer'];
+const SQL_S=['salesqualifiedlead','opportunity','99994170','customer'];
 
-// ========== METRICS ==========
-function filterC(list) {
-  if(!document.getElementById('excludePartners').checked) return list;
-  return list.filter(c=>!PARTNER_SOURCES.includes(c.attributed_source));
-}
-
-function calcMetrics(pk) {
+function calcMetrics(pk){
   const fc=filterC(contacts);
-  // MQLs = contacts CREATED in period with stage MQL, SQL, Opportunity, or Customer
-  const mqlStages=['marketingqualifiedlead','salesqualifiedlead','opportunity','99994170','customer'];
-  const mqls=fc.filter(c=>{
-    if(!c.create_date||getPeriodKey(c.create_date)!==pk) return false;
-    return mqlStages.includes(c.lifecycle_stage);
-  }).length;
-  // SQLs = contacts CREATED in period with stage SQL, Opportunity, or Customer
-  const sqlStages=['salesqualifiedlead','opportunity','99994170','customer'];
-  const sqls=fc.filter(c=>{
-    if(!c.create_date||getPeriodKey(c.create_date)!==pk) return false;
-    return sqlStages.includes(c.lifecycle_stage);
-  }).length;
-  // Meetings by created_date (when scheduled)
-  const mtgs=meetings.filter(m=>{
-    const d=m.created_date||m.start_time;
-    return d&&getPeriodKey(d)===pk;
-  }).length;
-  // Sits = completed meetings
-  const sits=meetings.filter(m=>{
-    if(!m.start_time||getPeriodKey(m.start_time)!==pk) return false;
-    const o=(m.outcome||'').toLowerCase().replace(/[_:]/g,' ');
-    return o.includes('completed')||o.includes('not needed')||o.includes('docs needed');
-  }).length;
-  // Closes (by create date) = customers CREATED in period
-  const closesCreated=fc.filter(c=>{
-    if(c.lifecycle_stage!=='customer') return false;
-    return c.create_date&&getPeriodKey(c.create_date)===pk;
-  }).length;
-  // Closes (by deal close date) = contacts whose recent_deal_close_date falls in period
-  const closesDeal=fc.filter(c=>{
-    return c.recent_deal_close_date&&getPeriodKey(c.recent_deal_close_date)===pk;
-  }).length;
-  return {mqls,sqls,mtgs,sits,closesCreated,closesDeal};
+  return{
+    mqls:fc.filter(c=>c.create_date&&getPeriodKey(c.create_date)===pk&&MQL_S.includes(c.lifecycle_stage)).length,
+    sqls:fc.filter(c=>c.create_date&&getPeriodKey(c.create_date)===pk&&SQL_S.includes(c.lifecycle_stage)).length,
+    mtgs:meetings.filter(m=>{const d=m.created_date||m.start_time;return d&&getPeriodKey(d)===pk}).length,
+    sits:meetings.filter(m=>{if(!m.start_time||getPeriodKey(m.start_time)!==pk)return false;const o=(m.outcome||'').toLowerCase().replace(/[_:]/g,' ');return o.includes('completed')||o.includes('not needed')||o.includes('docs needed')}).length,
+    closesCreated:fc.filter(c=>c.lifecycle_stage==='customer'&&c.create_date&&getPeriodKey(c.create_date)===pk).length,
+    closesDeal:fc.filter(c=>c.recent_deal_close_date&&getPeriodKey(c.recent_deal_close_date)===pk).length
+  };
 }
 
-// ========== RENDERERS ==========
-function renderKPIs(cur,prev) {
+function calcBySource(pk){
+  const ex=document.getElementById('excludePartners').checked;
+  let fc=contacts;if(ex)fc=fc.filter(c=>!PARTNERS.includes(c.attributed_source));
+  const out={};
+  fc.forEach(c=>{const s=c.attributed_source||'Unknown';if(!out[s])out[s]={mqls:0,sqls:0,closes:0};
+    if(c.create_date&&getPeriodKey(c.create_date)===pk){if(MQL_S.includes(c.lifecycle_stage))out[s].mqls++;if(SQL_S.includes(c.lifecycle_stage))out[s].sqls++;if(c.lifecycle_stage==='customer')out[s].closes++;}});
+  return out;
+}
+
+// ===== SPEND =====
+function getSpend(pk){
+  const r={};CHANNELS.forEach(c=>r[c]=0);r.total=0;
+  let pStart,pEnd;
+  if(viewMode==='weekly'){pStart=new Date(pk+'T00:00:00Z');pEnd=new Date(pStart);pEnd.setUTCDate(pEnd.getUTCDate()+7);}
+  else{const[y,m]=pk.split('-').map(Number);pStart=new Date(Date.UTC(y,m-1,1));pEnd=new Date(Date.UTC(y,m,1));}
+
+  SPEND_RAW.forEach(d=>{
+    const rS=new Date(d.start+'T00:00:00Z'),rE=new Date(d.end+'T00:00:00Z');rE.setUTCDate(rE.getUTCDate()+1);
+    const oS=Math.max(pStart.getTime(),rS.getTime()),oE=Math.min(pEnd.getTime(),rE.getTime());
+    if(oE>oS){const tot=(rE-rS)/864e5,ov=(oE-oS)/864e5,frac=tot>0?ov/tot:0,amt=d.spend*frac;
+      if(r[d.source]!==undefined)r[d.source]+=amt;r.total+=amt;}
+  });
+  return r;
+}
+
+// ===== CHART HELPERS =====
+function makeBar(id,labels,vals,color,isCurrency){
+  if(charts[id])charts[id].destroy();const el=document.getElementById(id);if(!el)return;
+  const v=[...vals];
+  charts[id]=new Chart(el.getContext('2d'),{type:'bar',data:{labels,datasets:[{data:v,backgroundColor:color+'99',borderColor:color,borderWidth:1,borderRadius:4,barPercentage:.7}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a2234',titleColor:'#e2e8f0',bodyColor:'#e2e8f0',borderColor:'#1e2d44',borderWidth:1,callbacks:{label:c=>isCurrency?'$'+Math.round(c.raw).toLocaleString():c.raw.toLocaleString()}}},
+      layout:{padding:{top:20}},scales:{x:{ticks:{color:'#8896aa',font:{family:'DM Sans',size:10}},grid:{color:'#1e2d44'}},y:{ticks:{color:'#8896aa',font:{family:'Space Mono',size:10},callback:v=>isCurrency?'$'+v.toLocaleString():v},grid:{color:'#1e2d44'},beginAtZero:true}},
+      animation:{onComplete:function(){const ci=this,x=ci.ctx;x.font="bold 11px 'Space Mono',monospace";x.fillStyle='#e2e8f0';x.textAlign='center';x.textBaseline='bottom';
+        ci.getDatasetMeta(0).data.forEach((b,i)=>{if(v[i]>0)x.fillText(isCurrency?'$'+Math.round(v[i]).toLocaleString():v[i].toLocaleString(),b.x,b.y-4)})}}
+    }});
+}
+
+function makeStacked(id,labels,datasets){
+  if(charts[id])charts[id].destroy();const el=document.getElementById(id);if(!el)return;
+  charts[id]=new Chart(el.getContext('2d'),{type:'bar',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#8896aa',font:{family:'DM Sans',size:10},boxWidth:10,padding:8}},
+      tooltip:{backgroundColor:'#1a2234',titleColor:'#e2e8f0',bodyColor:'#e2e8f0',borderColor:'#1e2d44',borderWidth:1,callbacks:{label:c=>`${c.dataset.label}: $${Math.round(c.raw).toLocaleString()}`}}},
+      scales:{x:{stacked:true,ticks:{color:'#8896aa',font:{family:'DM Sans',size:10}},grid:{color:'#1e2d44'}},y:{stacked:true,ticks:{color:'#8896aa',font:{family:'Space Mono',size:10},callback:v=>'$'+v.toLocaleString()},grid:{color:'#1e2d44'},beginAtZero:true}}}});
+}
+
+function makeHBar(id,srcData,key){
+  if(charts[id])charts[id].destroy();const el=document.getElementById(id);if(!el)return;
+  const entries=Object.entries(srcData).filter(([,v])=>v[key]>0).sort((a,b)=>b[1][key]-a[1][key]).slice(0,10);
+  if(!entries.length){el.getContext('2d').clearRect(0,0,el.width,el.height);return;}
+  const colors=['#22d3a7','#3b82f6','#f59e0b','#a855f7','#ec4899','#ef4444','#06b6d4','#84cc16','#f97316','#6b7280'];
+  charts[id]=new Chart(el.getContext('2d'),{type:'bar',data:{labels:entries.map(([k])=>k),datasets:[{data:entries.map(([,v])=>v[key]),backgroundColor:colors.slice(0,entries.length),borderWidth:0,borderRadius:4,barPercentage:.7}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a2234',titleColor:'#e2e8f0',bodyColor:'#e2e8f0'}},
+      scales:{x:{ticks:{color:'#8896aa',font:{family:'Space Mono',size:10}},grid:{color:'#1e2d44'},beginAtZero:true},y:{ticks:{color:'#8896aa',font:{family:'DM Sans',size:10}},grid:{display:false}}}}});
+}
+
+// ===== PIPELINE RENDERERS =====
+function renderKPIs(cur,prev){
   const cards=[{l:'MQLs',k:'mqls'},{l:'SQLs',k:'sqls'},{l:'Meetings',k:'mtgs'},{l:'Sits',k:'sits'},{l:'Closes (Created)',k:'closesCreated'},{l:'Closes (Won)',k:'closesDeal'}];
-  document.getElementById('kpiGrid').innerHTML=cards.map(c=>{
-    const v=cur[c.k],p=prev[c.k];
-    let ct='—',cc='flat';
-    if(p>0){const pct=Math.round(((v-p)/p)*100);ct=pct>0?`+${pct}%`:`${pct}%`;cc=pct>0?'up':pct<0?'down':'flat';}
-    else if(v>0){ct='+∞';cc='up';}
-    return `<div class="kpi-card"><div class="kpi-label">${c.l}</div><div class="kpi-value">${v.toLocaleString()}</div><div class="kpi-change ${cc}">${ct}</div><div class="kpi-prev">prev: ${p.toLocaleString()}</div></div>`;
-  }).join('');
+  document.getElementById('kpiGrid').innerHTML=cards.map(c=>{const v=cur[c.k],p=prev[c.k];let ct='—',cc='flat';
+    if(p>0){const pct=Math.round(((v-p)/p)*100);ct=pct>0?`+${pct}%`:`${pct}%`;cc=pct>0?'up':pct<0?'down':'flat';}else if(v>0){ct='+∞';cc='up';}
+    return`<div class="kpi-card"><div class="kpi-label">${c.l}</div><div class="kpi-value">${v.toLocaleString()}</div><div class="kpi-change ${cc}">${ct}</div><div class="kpi-prev">prev: ${p.toLocaleString()}</div></div>`;}).join('');
 }
-
-function renderFunnel(m) {
+function renderFunnel(m){
   const stages=[{n:'MQLs',v:m.mqls,c:'var(--accent)'},{n:'SQLs',v:m.sqls,c:'var(--accent2)'},{n:'Meetings',v:m.mtgs,c:'var(--accent3)'},{n:'Sits',v:m.sits,c:'var(--purple)'},{n:'Closes',v:m.closesDeal,c:'var(--pink)'}];
-  const mx=Math.max(...stages.map(s=>s.v),1);
-  let h='';
-  for(let i=0;i<stages.length;i++){
-    const s=stages[i],pct=Math.max((s.v/mx)*100,8);
+  const mx=Math.max(...stages.map(s=>s.v),1);let h='';
+  for(let i=0;i<stages.length;i++){const s=stages[i],pct=Math.max((s.v/mx)*100,8);
     h+=`<div class="funnel-stage"><div class="funnel-stage-name">${s.n}</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${s.c}"><span class="funnel-bar-label">${s.v.toLocaleString()}</span></div></div></div>`;
-    if(i<stages.length-1&&stages[i].v>0){h+=`<div class="funnel-arrow">↓ ${Math.round((stages[i+1].v/stages[i].v)*100)}%</div>`;}
-  }
+    if(i<stages.length-1&&stages[i].v>0)h+=`<div class="funnel-arrow">↓ ${Math.round((stages[i+1].v/stages[i].v)*100)}%</div>`;}
   document.getElementById('funnel').innerHTML=h;
 }
-
-function renderTrend() {
-  const n=viewMode==='weekly'?12:6;
-  const periods=[];let k=getCurrentPeriodKey();
+function renderTrend(){
+  const n=viewMode==='weekly'?12:6,periods=[];let k=getCurrentPeriodKey();
   for(let i=0;i<n;i++){periods.unshift(k);k=getPrevKey(k);}
-  const data=periods.map(p=>calcMetrics(p));
-  const labels=periods.map(formatShort);
-
-  const metricConfigs = [
-    { id: 'chartMqls', key: 'mqls', color: '#22d3a7', label: 'MQLs' },
-    { id: 'chartSqls', key: 'sqls', color: '#3b82f6', label: 'SQLs' },
-    { id: 'chartMtgs', key: 'mtgs', color: '#f59e0b', label: 'Meetings' },
-    { id: 'chartSits', key: 'sits', color: '#a855f7', label: 'Sits' },
-    { id: 'chartClosesCreated', key: 'closesCreated', color: '#ec4899', label: 'Closes (Created)' },
-    { id: 'chartClosesDeal', key: 'closesDeal', color: '#f43f5e', label: 'Closes (Won)' }
-  ];
-
-  metricConfigs.forEach(cfg => {
-    if (charts[cfg.id]) charts[cfg.id].destroy();
-    const ctx = document.getElementById(cfg.id).getContext('2d');
-    const values = data.map(d => d[cfg.key]);
-
-    charts[cfg.id] = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: cfg.label,
-          data: values,
-          backgroundColor: cfg.color + '99',
-          borderColor: cfg.color,
-          borderWidth: 1,
-          borderRadius: 4,
-          barPercentage: 0.7
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#1a2234',
-            titleColor: '#e2e8f0',
-            bodyColor: '#e2e8f0',
-            borderColor: '#1e2d44',
-            borderWidth: 1,
-            bodyFont: { family: 'Space Mono', size: 11 }
-          },
-          datalabels: false
-        },
-        layout: { padding: { top: 20 } },
-        scales: {
-          x: { ticks: { color: '#8896aa', font: { family: 'DM Sans', size: 10 } }, grid: { color: '#1e2d44' } },
-          y: { ticks: { color: '#8896aa', font: { family: 'Space Mono', size: 10 } }, grid: { color: '#1e2d44' }, beginAtZero: true }
-        },
-        animation: {
-          onComplete: function() {
-            const chartInstance = this;
-            const ctx2 = chartInstance.ctx;
-            ctx2.font = "bold 11px 'Space Mono', monospace";
-            ctx2.fillStyle = '#e2e8f0';
-            ctx2.textAlign = 'center';
-            ctx2.textBaseline = 'bottom';
-            const meta = chartInstance.getDatasetMeta(0);
-            meta.data.forEach((bar, i) => {
-              const val = values[i];
-              if (val > 0) ctx2.fillText(val.toLocaleString(), bar.x, bar.y - 4);
-            });
-          }
-        }
-      }
-    });
-  });
+  const data=periods.map(p=>calcMetrics(p)),labels=periods.map(formatShort);
+  [{id:'chartMqls',key:'mqls',c:'#22d3a7'},{id:'chartSqls',key:'sqls',c:'#3b82f6'},{id:'chartMtgs',key:'mtgs',c:'#f59e0b'},{id:'chartSits',key:'sits',c:'#a855f7'},{id:'chartClosesCreated',key:'closesCreated',c:'#ec4899'},{id:'chartClosesDeal',key:'closesDeal',c:'#f43f5e'}]
+    .forEach(cfg=>makeBar(cfg.id,labels,data.map(d=>d[cfg.key]),cfg.c,false));
+  // Source distribution
+  const ck=getCurrentPeriodKey(),sd=calcBySource(ck);
+  makeHBar('srcMqls',sd,'mqls');makeHBar('srcSqls',sd,'sqls');makeHBar('srcCloses',sd,'closes');
+  // Sits by source not available (meetings don't link to contact source)
+  if(charts['srcSits'])charts['srcSits'].destroy();
+  const el=document.getElementById('srcSits');if(el){const ctx=el.getContext('2d');ctx.clearRect(0,0,el.width,el.height);ctx.font="13px 'DM Sans',sans-serif";ctx.fillStyle='#8896aa';ctx.textAlign='center';ctx.fillText('Sits not attributable by contact source',el.width/2,el.height/2);}
 }
-
-function renderTable() {
-  const n=viewMode==='weekly'?12:6;
-  const periods=[];let k=getCurrentPeriodKey();
+function renderTable(){
+  const n=viewMode==='weekly'?12:6,periods=[];let k=getCurrentPeriodKey();
   for(let i=0;i<n;i++){periods.unshift(k);k=getPrevKey(k);}
-  const data=periods.map(p=>({key:p,...calcMetrics(p)}));
-  const maxM=Math.max(...data.map(d=>d.mqls),1);
+  const data=periods.map(p=>({key:p,...calcMetrics(p)})),maxM=Math.max(...data.map(d=>d.mqls),1);
   document.getElementById('tableTitle').textContent=viewMode==='weekly'?'Breakdown by Week':'Breakdown by Month';
   document.getElementById('tableHead').innerHTML='<tr><th>Period</th><th>MQLs</th><th>SQLs</th><th>Meetings</th><th>Sits</th><th>Closes (Created)</th><th>Closes (Won)</th><th>MQL→SQL</th><th>Mtg→Sit</th></tr>';
-  document.getElementById('tableBody').innerHTML=data.map(d=>{
-    const label=formatPeriod(d.key);
-    const bw=Math.max((d.mqls/maxM)*60,2);
-    const r1=d.mqls>0?Math.round((d.sqls/d.mqls)*100)+'%':'—';
-    const r2=d.mtgs>0?Math.round((d.sits/d.mtgs)*100)+'%':'—';
-    return `<tr><td style="font-family:var(--font);font-weight:500;font-size:13px">${label}</td><td><span class="mini-bar" style="width:${bw}px;background:var(--accent)"></span>${d.mqls}</td><td>${d.sqls}</td><td>${d.mtgs}</td><td>${d.sits}</td><td>${d.closesCreated}</td><td>${d.closesDeal}</td><td>${r1}</td><td>${r2}</td></tr>`;
-  }).join('');
+  document.getElementById('tableBody').innerHTML=data.map(d=>{const l=formatPeriod(d.key),bw=Math.max((d.mqls/maxM)*60,2),r1=d.mqls>0?Math.round((d.sqls/d.mqls)*100)+'%':'—',r2=d.mtgs>0?Math.round((d.sits/d.mtgs)*100)+'%':'—';
+    return`<tr><td style="font-family:var(--font);font-weight:500;font-size:13px">${l}</td><td><span class="mini-bar" style="width:${bw}px;background:var(--accent)"></span>${d.mqls}</td><td>${d.sqls}</td><td>${d.mtgs}</td><td>${d.sits}</td><td>${d.closesCreated}</td><td>${d.closesDeal}</td><td>${r1}</td><td>${r2}</td></tr>`}).join('');
 }
 
-function refresh() {
+// ===== SPEND RENDERERS =====
+function renderSpendKPIs(){
+  const ck=getCurrentPeriodKey(),pk=getPrevKey(ck),cs=getSpend(ck),ps=getSpend(pk),cm=calcMetrics(ck),pm=calcMetrics(pk);
+  const $=v=>'$'+Math.round(v).toLocaleString();
+  const items=[
+    {l:'Total Spend',v:cs.total,p:ps.total,inv:false},
+    {l:'Cost per MQL',v:cm.mqls?cs.total/cm.mqls:0,p:pm.mqls?ps.total/pm.mqls:0,inv:true},
+    {l:'Cost per Sit',v:cm.sits?cs.total/cm.sits:0,p:pm.sits?ps.total/pm.sits:0,inv:true},
+    {l:'CAC',v:cm.closesDeal?cs.total/cm.closesDeal:0,p:pm.closesDeal?ps.total/pm.closesDeal:0,inv:true}
+  ];
+  document.getElementById('spendKpiGrid').innerHTML=items.map(c=>{let ct='—',cc='flat';
+    if(c.p>0){const pct=Math.round(((c.v-c.p)/c.p)*100);ct=pct>0?`+${pct}%`:`${pct}%`;cc=c.inv?(pct>0?'down':pct<0?'up':'flat'):(pct>0?'up':pct<0?'down':'flat');}
+    return`<div class="kpi-card"><div class="kpi-label">${c.l}</div><div class="kpi-value" style="font-size:26px">${c.v>0?$(c.v):'—'}</div><div class="kpi-change ${cc}">${ct}</div><div class="kpi-prev">prev: ${c.p>0?$(c.p):'—'}</div></div>`}).join('');
+}
+function renderSpendCharts(){
+  const n=viewMode==='weekly'?12:6,periods=[];let k=getCurrentPeriodKey();
+  for(let i=0;i<n;i++){periods.unshift(k);k=getPrevKey(k);}
+  const labels=periods.map(formatShort),sd=periods.map(p=>getSpend(p)),md=periods.map(p=>calcMetrics(p));
+
+  makeBar('chartSpend',labels,sd.map(s=>Math.round(s.total)),'#22d3a7',true);
+
+  const activeCh=CHANNELS.filter(ch=>sd.some(s=>s[ch]>10));
+  makeStacked('chartSpendCh',labels,activeCh.map(ch=>({label:ch,data:sd.map(s=>Math.round(s[ch])),backgroundColor:CH_COLORS[ch]+'cc',borderColor:CH_COLORS[ch],borderWidth:1,borderRadius:2})));
+
+  makeBar('chartCPL',labels,sd.map((s,i)=>md[i].mqls?Math.round(s.total/md[i].mqls):0),'#3b82f6',true);
+  makeBar('chartCPS',labels,sd.map((s,i)=>md[i].sits?Math.round(s.total/md[i].sits):0),'#a855f7',true);
+  makeBar('chartCAC',labels,sd.map((s,i)=>md[i].closesDeal?Math.round(s.total/md[i].closesDeal):0),'#f43f5e',true);
+
+  // Channel trend (same as stacked but non-stacked)
+  makeStacked('chartChTrend',labels,activeCh.map(ch=>({label:ch,data:sd.map(s=>Math.round(s[ch])),backgroundColor:CH_COLORS[ch]+'cc',borderColor:CH_COLORS[ch],borderWidth:1,borderRadius:2})));
+}
+function renderSpendTable(){
+  const n=viewMode==='weekly'?12:6,periods=[];let k=getCurrentPeriodKey();
+  for(let i=0;i<n;i++){periods.unshift(k);k=getPrevKey(k);}
+  const sd=periods.map(p=>getSpend(p)),md=periods.map(p=>calcMetrics(p));
+  const activeCh=CHANNELS.filter(ch=>sd.some(s=>s[ch]>10));
+  document.getElementById('spendTableTitle').textContent=viewMode==='weekly'?'Spend & Unit Economics by Week':'Spend & Unit Economics by Month';
+  document.getElementById('spendTableHead').innerHTML='<tr><th>Period</th><th>Spend</th>'+activeCh.map(c=>`<th>${c}</th>`).join('')+'<th>MQLs</th><th>Sits</th><th>Closes</th><th>$/MQL</th><th>$/Sit</th><th>CAC</th></tr>';
+  document.getElementById('spendTableBody').innerHTML=periods.map((p,i)=>{
+    const s=sd[i],m=md[i],cpl=m.mqls?Math.round(s.total/m.mqls):0,cps=m.sits?Math.round(s.total/m.sits):0,cac=m.closesDeal?Math.round(s.total/m.closesDeal):0;
+    return`<tr><td style="font-family:var(--font);font-weight:500;font-size:13px">${formatPeriod(p)}</td><td>$${Math.round(s.total).toLocaleString()}</td>${activeCh.map(c=>`<td>$${Math.round(s[c]).toLocaleString()}</td>`).join('')}<td>${m.mqls}</td><td>${m.sits}</td><td>${m.closesDeal}</td><td>${cpl?'$'+cpl.toLocaleString():'—'}</td><td>${cps?'$'+cps.toLocaleString():'—'}</td><td>${cac?'$'+cac.toLocaleString():'—'}</td></tr>`}).join('');
+}
+
+// ===== MAIN =====
+function refresh(){
   const ck=getCurrentPeriodKey(),pk=getPrevKey(ck);
-  renderKPIs(calcMetrics(ck),calcMetrics(pk));
-  renderFunnel(calcMetrics(ck));
-  renderTrend();
-  renderTable();
   document.getElementById('periodLabel').textContent=formatPeriod(ck);
+  if(activeTab==='pipeline'){renderKPIs(calcMetrics(ck),calcMetrics(pk));renderFunnel(calcMetrics(ck));renderTrend();renderTable();}
+  else{renderSpendKPIs();renderSpendCharts();renderSpendTable();}
 }
-
-function setView(mode) {
-  viewMode=mode;periodOffset=0;
-  document.querySelectorAll('.period-toggle button').forEach(b=>b.classList.remove('active'));
-  event.target.classList.add('active');
-  refresh();
-}
-
-function navigatePeriod(dir){periodOffset+=dir;refresh();}
+function setTab(t,btn){activeTab=t;document.querySelectorAll('#tabToggle button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));document.getElementById(t==='pipeline'?'tabPipeline':'tabSpend').classList.add('active');refresh();}
+function setView(m){viewMode=m;periodOffset=0;document.querySelectorAll('#periodToggle button').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');refresh();}
+function navigatePeriod(d){periodOffset+=d;refresh();}
 
 loadData();
 </script>
