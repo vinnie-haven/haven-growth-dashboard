@@ -115,7 +115,7 @@ const SB_URL='https://vnxerxefgodekwjdxfqc.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZueGVyeGVmZ29kZWt3amR4ZnFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1MjY3MjgsImV4cCI6MjA4NDEwMjcyOH0.yV2rEL6PDBW2qjctwsk67-l77miABQ0ssiI6MA2CfEo';
 const sb=window.supabase.createClient(SB_URL,SB_KEY);
 const FUNC_URL=SB_URL+'/functions/v1/sync-growth-marketing';
-const PARTNERS=['PCE','CPA','QCS','Self-Generated','CEA','Baker','Skelly Electric','Taylor Energy','California Solar Electric','Blue Sky Center','EPX','SJCE'];
+const MARKETING_SOURCES=['direct_traffic','Meta','Google Paid','Next Door','Capital One','Referrals Program','LinkedIn'];
 const CHANNELS=['Direct mail','Meta','Google Paid','Next Door','Capital One','Referrals Program'];
 const CH_COLORS={'Direct mail':'#f59e0b','Meta':'#3b82f6','Google Paid':'#22d3a7','Next Door':'#a855f7','Capital One':'#ec4899','Referrals Program':'#ef4444'};
 
@@ -138,7 +138,7 @@ async function loadData(){
 function populateSourceFilter(){
   const s=new Set();contacts.forEach(c=>{if(c.attributed_source)s.add(c.attributed_source)});
   const sources=[...s].sort();
-  const filtered=metricScope==='marketing'?sources.filter(v=>!PARTNERS.includes(v)):sources;
+  const filtered=metricScope==='marketing'?sources.filter(v=>MARKETING_SOURCES.includes(v)):sources;
   const sel=document.getElementById('sourceFilter');
   const cur=sel.value;
   sel.innerHTML='<option value="all">All Sources</option>'+filtered.map(v=>`<option value="${v}">${sourceLabel(v)}</option>`).join('');
@@ -178,7 +178,7 @@ function formatShort(k){if(viewMode==='weekly'){return new Date(k+'T00:00:00Z').
 // ===== FILTERING =====
 function filterC(list){
   let f=list;
-  if(metricScope==='marketing')f=f.filter(c=>!PARTNERS.includes(c.attributed_source));
+  if(metricScope==='marketing')f=f.filter(c=>MARKETING_SOURCES.includes(c.attributed_source));
   const sv=document.getElementById('sourceFilter').value;
   if(sv!=='all')f=f.filter(c=>c.attributed_source===sv);
   return f;
@@ -202,7 +202,7 @@ function calcMetrics(pk){
 }
 
 function calcBySource(pk){
-  let fc=contacts;if(metricScope==='marketing')fc=fc.filter(c=>!PARTNERS.includes(c.attributed_source));
+  let fc=contacts;if(metricScope==='marketing')fc=fc.filter(c=>MARKETING_SOURCES.includes(c.attributed_source));
   const out={};
   fc.forEach(c=>{const s=c.attributed_source||'Unknown';if(!out[s])out[s]={mqls:0,sqls:0,closes:0};
     if(c.create_date&&getPeriodKey(c.create_date)===pk){if(MQL_S.includes(c.lifecycle_stage))out[s].mqls++;if(SQL_S.includes(c.lifecycle_stage))out[s].sqls++;if(c.lifecycle_stage==='customer')out[s].closes++;}});
@@ -213,7 +213,7 @@ function getSrcColor(s){return SRC_COLORS[s]||'#'+((Math.abs(s.split('').reduce(
 function calcMetricsBySource(periods,key){
   const srcTotals={};
   const perPeriod=periods.map(pk=>{
-    let fc=contacts;if(metricScope==='marketing')fc=fc.filter(c=>!PARTNERS.includes(c.attributed_source));
+    let fc=contacts;if(metricScope==='marketing')fc=fc.filter(c=>MARKETING_SOURCES.includes(c.attributed_source));
     const sv=document.getElementById('sourceFilter').value;if(sv!=='all')fc=fc.filter(c=>c.attributed_source===sv);
     const out={};
     fc.forEach(c=>{
