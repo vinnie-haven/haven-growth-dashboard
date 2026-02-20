@@ -55,7 +55,7 @@
   .chart-container { position:relative; height:280px; }
   .funnel-stages{display:flex;flex-direction:column;gap:8px} .funnel-stage{display:flex;align-items:center;gap:10px} .funnel-stage-name{font-size:12px;font-weight:600;color:var(--text-dim);width:64px;text-align:right} .funnel-bar-wrap{flex:1;height:38px;background:var(--surface2);border-radius:8px;overflow:hidden} .funnel-bar{height:100%;border-radius:8px;transition:width .6s ease;display:flex;align-items:center;padding-left:12px;min-width:36px} .funnel-bar-label{font-family:var(--mono);font-size:12px;font-weight:700;color:#0a0f1a;white-space:nowrap} .funnel-arrow{text-align:center;color:var(--text-dim);font-size:11px;padding-left:74px;font-family:var(--mono)}
   .table-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; overflow-x:auto; margin-bottom:28px; }
-  .table-card table{width:100%;border-collapse:collapse} .table-card th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);text-align:left;padding:10px 12px;border-bottom:1px solid var(--border)} .table-card td{padding:10px 12px;font-family:var(--mono);font-size:12px;border-bottom:1px solid var(--border)} .table-card tr:last-child td{border-bottom:none} .table-card tr:hover td{background:var(--surface2)}
+  .table-card table{width:100%;border-collapse:collapse} .table-card th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);text-align:center;padding:10px 12px;border-bottom:1px solid var(--border)} .table-card th:first-child{text-align:left} .table-card td{padding:12px 12px;font-family:var(--mono);font-size:14px;border-bottom:1px solid var(--border);text-align:center} .table-card td:first-child{text-align:left} .table-card tr:last-child td{border-bottom:none} .table-card tr:hover td{background:var(--surface2)}
   .mini-bar{display:inline-block;height:6px;border-radius:3px;margin-right:8px;vertical-align:middle}
   .spend-kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;margin-bottom:28px}
   .sync-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,15,26,.85);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .3s} .sync-overlay.show{opacity:1;pointer-events:all} .sync-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 40px;max-width:420px;width:90%;text-align:center} .sync-modal h3{font-size:16px;margin-bottom:16px} .sync-progress{font-family:var(--mono);font-size:13px;color:var(--accent);margin-bottom:8px} .sync-detail{font-size:12px;color:var(--text-dim);margin-bottom:16px} .sync-bar-track{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden} .sync-bar-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
@@ -75,7 +75,7 @@
 </div>
 <div class="main">
   <div class="tab-content active" id="tabPipeline">
-    <div class="kpi-grid" id="kpiGrid"></div>
+    <div class="table-card" id="summaryCard"><div class="chart-title" id="summaryTitle">Pipeline Summary</div><div style="font-size:12px;color:var(--text-dim);margin-bottom:16px">Volume metrics with conversion rates for each period</div><table><thead id="summaryHead"></thead><tbody id="summaryBody"></tbody></table></div>
     <div class="charts-grid">
       <div class="chart-card"><div class="chart-title">MQLs</div><div class="chart-container"><canvas id="chartMqls"></canvas></div></div>
       <div class="chart-card"><div class="chart-title">SQLs</div><div class="chart-container"><canvas id="chartSqls"></canvas></div></div>
@@ -90,8 +90,6 @@
       <div class="chart-card"><div class="chart-title" id="srcSitsTitle">Sits by Source</div><div class="chart-container"><canvas id="srcSits"></canvas></div></div>
       <div class="chart-card"><div class="chart-title" id="srcClosesTitle">Closes by Source</div><div class="chart-container"><canvas id="srcCloses"></canvas></div></div>
     </div>
-    <div class="charts-grid"><div class="chart-card"><div class="chart-title">Conversion Funnel</div><div class="funnel-stages" id="funnel"></div></div></div>
-    <div class="table-card"><div class="chart-title" id="tableTitle">Breakdown by Week</div><table><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table></div>
   </div>
   <div class="tab-content" id="tabSpend">
     <div class="spend-kpi-grid" id="spendKpiGrid"></div>
@@ -297,19 +295,18 @@ function makeHBar(id,srcData,key){
 }
 
 // ===== PIPELINE RENDERERS =====
-function renderKPIs(cur,prev){
-  const cards=[{l:'MQLs',k:'mqls'},{l:'SQLs',k:'sqls'},{l:'Meetings',k:'mtgs'},{l:'Sits',k:'sits'},{l:'Closes (Created)',k:'closesCreated'},{l:'Closes (Won)',k:'closesDeal'}];
-  document.getElementById('kpiGrid').innerHTML=cards.map(c=>{const v=cur[c.k],p=prev[c.k];let ct='—',cc='flat';
-    if(p>0){const pct=Math.round(((v-p)/p)*100);ct=pct>0?`+${pct}%`:`${pct}%`;cc=pct>0?'up':pct<0?'down':'flat';}else if(v>0){ct='+∞';cc='up';}
-    return`<div class="kpi-card"><div class="kpi-label">${c.l}</div><div class="kpi-value">${v.toLocaleString()}</div><div class="kpi-change ${cc}">${ct}</div><div class="kpi-prev">prev: ${p.toLocaleString()}</div></div>`;}).join('');
-}
-function renderFunnel(m){
-  const stages=[{n:'MQLs',v:m.mqls,c:'var(--accent)'},{n:'SQLs',v:m.sqls,c:'var(--accent2)'},{n:'Meetings',v:m.mtgs,c:'var(--accent3)'},{n:'Sits',v:m.sits,c:'var(--purple)'},{n:'Closes',v:m.closesDeal,c:'var(--pink)'}];
-  const mx=Math.max(...stages.map(s=>s.v),1);let h='';
-  for(let i=0;i<stages.length;i++){const s=stages[i],pct=Math.max((s.v/mx)*100,8);
-    h+=`<div class="funnel-stage"><div class="funnel-stage-name">${s.n}</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${s.c}"><span class="funnel-bar-label">${s.v.toLocaleString()}</span></div></div></div>`;
-    if(i<stages.length-1&&stages[i].v>0)h+=`<div class="funnel-arrow">↓ ${Math.round((stages[i+1].v/stages[i].v)*100)}%</div>`;}
-  document.getElementById('funnel').innerHTML=h;
+function renderSummary(){
+  const n=viewMode==='weekly'?12:8,periods=[];let k=getCurrentPeriodKey();
+  for(let i=0;i<n;i++){periods.unshift(k);k=getPrevKey(k);}
+  const data=periods.map(p=>({key:p,...calcMetrics(p)}));
+  document.getElementById('summaryTitle').textContent=viewMode==='weekly'?'Pipeline Summary by Week':'Pipeline Summary by Month';
+  document.getElementById('summaryHead').innerHTML='<tr><th>Period</th><th>MQLs</th><th>SQLs</th><th>Meetings</th><th>Sits</th><th>Closes (Won)</th><th>MQL→SQL</th><th>SQL→Mtg</th><th>Mtg→Sit</th><th>Sit→Close</th></tr>';
+  document.getElementById('summaryBody').innerHTML=data.reverse().map(d=>{
+    const r1=d.mqls>0?Math.round((d.sqls/d.mqls)*100)+'%':'—';
+    const r2=d.sqls>0?Math.round((d.mtgs/d.sqls)*100)+'%':'—';
+    const r3=d.mtgs>0?Math.round((d.sits/d.mtgs)*100)+'%':'—';
+    const r4=d.sits>0?Math.round((d.closesDeal/d.sits)*100)+'%':'—';
+    return`<tr><td style="font-family:var(--font);font-weight:600;font-size:13px">${formatPeriod(d.key)}</td><td style="color:#22d3a7;font-weight:700">${d.mqls}</td><td style="color:#3b82f6;font-weight:700">${d.sqls}</td><td style="color:#f59e0b;font-weight:700">${d.mtgs}</td><td style="color:#a855f7;font-weight:700">${d.sits}</td><td style="color:#f43f5e;font-weight:700">${d.closesDeal}</td><td>${r1}</td><td>${r2}</td><td>${r3}</td><td>${r4}</td></tr>`}).join('');
 }
 function renderTrend(){
   const n=viewMode==='weekly'?12:6,periods=[];let k=getCurrentPeriodKey();
@@ -326,15 +323,6 @@ function renderTrend(){
   const ck=getCurrentPeriodKey(),sd=calcBySource(ck);
   makeHBar('srcCloses',sd,'closes');
   makeHBar('srcSits',sd,'sits');
-}
-function renderTable(){
-  const n=viewMode==='weekly'?12:6,periods=[];let k=getCurrentPeriodKey();
-  for(let i=0;i<n;i++){periods.unshift(k);k=getPrevKey(k);}
-  const data=periods.map(p=>({key:p,...calcMetrics(p)})),maxM=Math.max(...data.map(d=>d.mqls),1);
-  document.getElementById('tableTitle').textContent=viewMode==='weekly'?'Breakdown by Week':'Breakdown by Month';
-  document.getElementById('tableHead').innerHTML='<tr><th>Period</th><th>MQLs</th><th>SQLs</th><th>Meetings</th><th>Sits</th><th>Closes (Created)</th><th>Closes (Won)</th><th>MQL→SQL</th><th>Mtg→Sit</th><th>Sit→Close</th></tr>';
-  document.getElementById('tableBody').innerHTML=data.map(d=>{const l=formatPeriod(d.key),bw=Math.max((d.mqls/maxM)*60,2),r1=d.mqls>0?Math.round((d.sqls/d.mqls)*100)+'%':'—',r2=d.mtgs>0?Math.round((d.sits/d.mtgs)*100)+'%':'—',r3=d.sits>0?Math.round((d.closesDeal/d.sits)*100)+'%':'—';
-    return`<tr><td style="font-family:var(--font);font-weight:500;font-size:13px">${l}</td><td><span class="mini-bar" style="width:${bw}px;background:var(--accent)"></span>${d.mqls}</td><td>${d.sqls}</td><td>${d.mtgs}</td><td>${d.sits}</td><td>${d.closesCreated}</td><td>${d.closesDeal}</td><td>${r1}</td><td>${r2}</td><td>${r3}</td></tr>`}).join('');
 }
 
 // ===== SPEND RENDERERS =====
@@ -388,7 +376,7 @@ function renderSpendTable(){
 function refresh(){
   const ck=getCurrentPeriodKey(),pk=getPrevKey(ck);
   document.getElementById('periodLabel').textContent=formatPeriod(ck);
-  if(activeTab==='pipeline'){renderKPIs(calcMetrics(ck),calcMetrics(pk));renderFunnel(calcMetrics(ck));renderTrend();renderTable();}
+  if(activeTab==='pipeline'){renderSummary();renderTrend();}
   else{renderSpendKPIs();renderSpendCharts();renderSpendTable();}
 }
 function setTab(t,btn){activeTab=t;document.querySelectorAll('#tabToggle button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
