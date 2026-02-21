@@ -61,19 +61,26 @@
   .sync-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,15,26,.85);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .3s} .sync-overlay.show{opacity:1;pointer-events:all} .sync-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 40px;max-width:420px;width:90%;text-align:center} .sync-modal h3{font-size:16px;margin-bottom:16px} .sync-progress{font-family:var(--mono);font-size:13px;color:var(--accent);margin-bottom:8px} .sync-detail{font-size:12px;color:var(--text-dim);margin-bottom:16px} .sync-bar-track{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden} .sync-bar-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
   @media(max-width:1100px){.kpi-grid,.spend-kpi-grid{grid-template-columns:repeat(3,1fr)} .charts-grid{grid-template-columns:1fr}}
   @media(max-width:700px){.kpi-grid,.spend-kpi-grid{grid-template-columns:repeat(2,1fr)} .controls{flex-direction:column;align-items:flex-start} .topbar,.main,.controls{padding-left:16px;padding-right:16px}}
+  #megaTable{font-size:13px} #megaTable th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);text-align:center;padding:8px 14px;border-bottom:1px solid var(--border);white-space:nowrap} #megaTable th:first-child{text-align:left;min-width:180px;position:sticky;left:0;background:var(--surface);z-index:1}
+  #megaTable td{padding:8px 14px;font-family:var(--mono);font-size:13px;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap} #megaTable td:first-child{text-align:left;font-family:var(--font);font-weight:500;position:sticky;left:0;background:var(--surface);z-index:1}
+  #megaTable tr:hover td{background:var(--surface2)} #megaTable .section-row td{font-family:var(--font);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);padding-top:18px;border-bottom:2px solid var(--border);text-align:left;background:var(--bg)!important}
+  .mega-wrap{overflow-x:auto;max-width:100%}
 </style>
 </head>
 <body>
 <div class="topbar"><div class="topbar-left"><div class="logo">Haven Energy</div><div class="topbar-title">Growth Marketing</div></div><div class="topbar-right"><button class="sync-btn" id="syncBtn" onclick="runSync()">⟳ Sync HubSpot</button><span class="sync-status" id="syncStatus">Loading...</span></div></div>
 <div class="controls">
   <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-    <div class="toggle-group" id="tabToggle"><button class="active" onclick="setTab('pipeline',this)">Pipeline</button><button onclick="setTab('spend',this)">Spend</button><button onclick="setTab('site',this)">Site Conversion</button></div>
+    <div class="toggle-group" id="tabToggle"><button onclick="setTab('summary',this)">Summary</button><button class="active" onclick="setTab('pipeline',this)">Pipeline</button><button onclick="setTab('spend',this)">Spend</button><button onclick="setTab('site',this)">Site Conversion</button></div>
     <div class="toggle-group" id="periodToggle"><button class="active" onclick="setView('weekly')">Weekly</button><button onclick="setView('monthly')">Monthly</button></div>
   </div>
   <div class="period-nav"><button onclick="navigatePeriod(-1)">←</button><div class="period-label" id="periodLabel">—</div><button onclick="navigatePeriod(1)">→</button></div>
   <div class="filter-group"><select id="sourceFilter" onchange="refresh()"><option value="all">All Sources</option></select><div class="toggle-group" id="scopeToggle"><button onclick="setScope('marketing',this)">Marketing</button><button class="active" onclick="setScope('total',this)">Total</button></div></div>
 </div>
 <div class="main">
+  <div class="tab-content" id="tabSummary">
+    <div class="table-card"><div class="chart-title" id="megaTitle">Summary</div><div class="mega-wrap"><table id="megaTable" style="width:100%;border-collapse:collapse"><thead id="megaHead"></thead><tbody id="megaBody"></tbody></table></div></div>
+  </div>
   <div class="tab-content active" id="tabPipeline">
     <div class="table-card" id="summaryCard"><div class="chart-title" id="summaryTitle">Pipeline Summary</div><div style="font-size:12px;color:var(--text-dim);margin-bottom:16px">Volume metrics with conversion rates for each period</div><table><thead id="summaryHead"></thead><tbody id="summaryBody"></tbody></table></div>
     <div class="charts-grid">
@@ -393,6 +400,63 @@ function renderSpendTable(){
     return`<tr><td style="font-family:var(--font);font-weight:500;font-size:13px">${formatPeriod(p)}</td><td>$${Math.round(s.total).toLocaleString()}</td>${activeCh.map(c=>`<td>$${Math.round(s[c]).toLocaleString()}</td>`).join('')}<td>${m.mqls}</td><td>${m.sqls}</td><td>${m.mtgs}</td><td>${m.sits}</td><td>${m.closesDeal}</td><td>${cpl?'$'+cpl.toLocaleString():'—'}</td><td>${cpsql?'$'+cpsql.toLocaleString():'—'}</td><td>${cpm?'$'+cpm.toLocaleString():'—'}</td><td>${cps?'$'+cps.toLocaleString():'—'}</td><td>${cac?'$'+cac.toLocaleString():'—'}</td></tr>`}).join('');
 }
 
+// ===== MEGA SUMMARY =====
+function renderMegaSummary(){
+  const n=viewMode==='weekly'?12:8,periods=[];let k=getCurrentPeriodKey();
+  for(let i=0;i<n;i++){periods.unshift(k);k=getPrevKey(k);}
+  const pipe=periods.map(p=>calcMetrics(p));
+  const site=periods.map(p=>{const s=aggSite(p);return{v:s.v,vqf:s.vqf,cqf:s.cqf,qs:s.qs};});
+  const spend=periods.map(p=>getSpend(p));
+
+  document.getElementById('megaTitle').textContent=viewMode==='weekly'?'Weekly Summary':'Monthly Summary';
+  document.getElementById('megaHead').innerHTML='<tr><th>Metric</th>'+periods.map(p=>`<th>${formatShort(p)}</th>`).join('')+'</tr>';
+
+  const pct=(a,b)=>b>0?Math.round(a/b*100)+'%':'—';
+  const $=v=>v>0?'$'+Math.round(v).toLocaleString():'—';
+
+  const sections=[
+    {title:'Site Traffic',rows:[
+      {label:'Unique website visits',vals:site.map(s=>s.v.toLocaleString())},
+      {label:'Started quote flow',vals:site.map(s=>s.vqf.toLocaleString())},
+      {label:'Finished quote flow',vals:site.map(s=>s.cqf.toLocaleString())},
+    ]},
+    {title:'Site Conversion',rows:[
+      {label:'Site visit → Start QF',vals:site.map(s=>pct(s.vqf,s.v))},
+      {label:'Start → Finish QF',vals:site.map(s=>pct(s.cqf,s.vqf))},
+      {label:'Finish QF → Submit info',vals:site.map(s=>pct(s.qs,s.cqf))},
+    ]},
+    {title:'Marketing & Sales',rows:[
+      {label:'MQLs',vals:pipe.map(p=>p.mqls.toLocaleString())},
+      {label:'SQLs',vals:pipe.map(p=>p.sqls.toLocaleString())},
+      {label:'Meetings',vals:pipe.map(p=>p.mtgs.toLocaleString())},
+      {label:'Sits',vals:pipe.map(p=>p.sits.toLocaleString())},
+      {label:'Closes',vals:pipe.map(p=>p.closesDeal.toLocaleString())},
+    ]},
+    {title:'Conversion Metrics',rows:[
+      {label:'MQL → SQL',vals:pipe.map(p=>pct(p.sqls,p.mqls))},
+      {label:'SQL → Meetings',vals:pipe.map(p=>pct(p.mtgs,p.sqls))},
+      {label:'Meeting → Sits',vals:pipe.map(p=>pct(p.sits,p.mtgs))},
+      {label:'Sits → Closed',vals:pipe.map(p=>pct(p.closesDeal,p.sits))},
+    ]},
+    {title:'Cost Metrics',rows:[
+      {label:'Total Spend',vals:spend.map(s=>$(s.total))},
+      {label:'$ / MQL',vals:periods.map((_,i)=>pipe[i].mqls>0?$(spend[i].total/pipe[i].mqls):'—')},
+      {label:'$ / SQL',vals:periods.map((_,i)=>pipe[i].sqls>0?$(spend[i].total/pipe[i].sqls):'—')},
+      {label:'$ / Sit',vals:periods.map((_,i)=>pipe[i].sits>0?$(spend[i].total/pipe[i].sits):'—')},
+      {label:'$ / Close',vals:periods.map((_,i)=>pipe[i].closesDeal>0?$(spend[i].total/pipe[i].closesDeal):'—')},
+    ]},
+  ];
+
+  let html='';
+  sections.forEach(sec=>{
+    html+=`<tr class="section-row"><td colspan="${n+1}">${sec.title}</td></tr>`;
+    sec.rows.forEach(row=>{
+      html+=`<tr><td>${row.label}</td>${row.vals.map(v=>`<td>${v}</td>`).join('')}</tr>`;
+    });
+  });
+  document.getElementById('megaBody').innerHTML=html;
+}
+
 // ===== SITE CONVERSION =====
 let siteData=SITE_RAW;
 let siteDevFilter='all';
@@ -496,13 +560,14 @@ function handleSiteUpload(e){
 function refresh(){
   const ck=getCurrentPeriodKey(),pk=getPrevKey(ck);
   document.getElementById('periodLabel').textContent=formatPeriod(ck);
-  if(activeTab==='pipeline'){renderSummary();renderTrend();}
+  if(activeTab==='summary'){renderMegaSummary();}
+  else if(activeTab==='pipeline'){renderSummary();renderTrend();}
   else if(activeTab==='spend'){renderSpendKPIs();renderSpendCharts();renderSpendTable();}
   else if(activeTab==='site'){renderSite();}
 }
 function setTab(t,btn){activeTab=t;document.querySelectorAll('#tabToggle button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
   document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
-  const tabMap={pipeline:'tabPipeline',spend:'tabSpend',site:'tabSite'};
+  const tabMap={summary:'tabSummary',pipeline:'tabPipeline',spend:'tabSpend',site:'tabSite'};
   document.getElementById(tabMap[t]).classList.add('active');refresh();}
 function setView(m){viewMode=m;periodOffset=0;document.querySelectorAll('#periodToggle button').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');refresh();}
 function navigatePeriod(d){periodOffset+=d;refresh();}
