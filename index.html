@@ -285,14 +285,14 @@ function getSpend(pk){
 }
 
 // ===== CHART HELPERS =====
-function makeBar(id,labels,vals,color,isCurrency){
+function makeBar(id,labels,vals,color,isCurrency,isPercent){
   if(charts[id])charts[id].destroy();const el=document.getElementById(id);if(!el)return;
-  const v=[...vals];
+  const v=[...vals];const fmt=val=>isPercent?Math.round(val)+'%':isCurrency?'$'+Math.round(val).toLocaleString():val.toLocaleString();
   charts[id]=new Chart(el.getContext('2d'),{type:'bar',data:{labels,datasets:[{data:v,backgroundColor:color+'99',borderColor:color,borderWidth:1,borderRadius:4,barPercentage:.7}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a2234',titleColor:'#e2e8f0',bodyColor:'#e2e8f0',borderColor:'#1e2d44',borderWidth:1,callbacks:{label:c=>isCurrency?'$'+Math.round(c.raw).toLocaleString():c.raw.toLocaleString()}}},
-      layout:{padding:{top:20}},scales:{x:{ticks:{color:'#8896aa',font:{family:'DM Sans',size:10}},grid:{color:'#1e2d44'}},y:{ticks:{color:'#8896aa',font:{family:'Space Mono',size:10},callback:v=>isCurrency?'$'+v.toLocaleString():v},grid:{color:'#1e2d44'},beginAtZero:true}},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a2234',titleColor:'#e2e8f0',bodyColor:'#e2e8f0',borderColor:'#1e2d44',borderWidth:1,callbacks:{label:c=>fmt(c.raw)}}},
+      layout:{padding:{top:20}},scales:{x:{ticks:{color:'#8896aa',font:{family:'DM Sans',size:10}},grid:{color:'#1e2d44'}},y:{ticks:{color:'#8896aa',font:{family:'Space Mono',size:10},callback:val=>isPercent?val+'%':isCurrency?'$'+val.toLocaleString():val},grid:{color:'#1e2d44'},beginAtZero:true}},
       animation:{onComplete:function(){const ci=this,x=ci.ctx;x.font="bold 11px 'Space Mono',monospace";x.fillStyle='#e2e8f0';x.textAlign='center';x.textBaseline='bottom';
-        ci.getDatasetMeta(0).data.forEach((b,i)=>{if(v[i]>0)x.fillText(isCurrency?'$'+Math.round(v[i]).toLocaleString():v[i].toLocaleString(),b.x,b.y-4)})}}
+        ci.getDatasetMeta(0).data.forEach((b,i)=>{if(v[i]>0)x.fillText(fmt(v[i]),b.x,b.y-4)})}}
     }});
 }
 
@@ -444,9 +444,9 @@ function renderSite(){
   makeBar('chartSiteQRS',labels,data.map(d=>d.qs),'#a855f7',false);
 
   // Conversion rate charts
-  makeBar('chartSiteR1',labels,data.map(d=>d.v>0?Math.round(d.vqf/d.v*1000)/10:0),'#3b82f6',false);
-  makeBar('chartSiteR2',labels,data.map(d=>d.vqf>0?Math.round(d.cqf/d.vqf*1000)/10:0),'#f59e0b',false);
-  makeBar('chartSiteR3',labels,data.map(d=>d.cqf>0?Math.round(d.qs/d.cqf*1000)/10:0),'#a855f7',false);
+  makeBar('chartSiteR1',labels,data.map(d=>d.v>0?Math.round(d.vqf/d.v*100):0),'#3b82f6',false,true);
+  makeBar('chartSiteR2',labels,data.map(d=>d.vqf>0?Math.round(d.cqf/d.vqf*100):0),'#f59e0b',false,true);
+  makeBar('chartSiteR3',labels,data.map(d=>d.cqf>0?Math.round(d.qs/d.cqf*100):0),'#a855f7',false,true);
 
   // Mobile vs Desktop comparison - stacked bar of Visit→QF conversion
   const mData=raw.map(s=>s.mv>0?Math.round(s.mvqf/s.mv*1000)/10:0);
