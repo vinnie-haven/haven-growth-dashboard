@@ -108,6 +108,12 @@
       <div class="chart-card"><div class="chart-title">Closes (Won)</div><div class="chart-container"><canvas id="chartClosesDeal"></canvas></div></div>
     </div>
     <div class="charts-grid">
+      <div class="chart-card"><div class="chart-title">MQL → SQL %</div><div class="chart-container"><canvas id="chartConvMqlSql"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">SQL → Meeting %</div><div class="chart-container"><canvas id="chartConvSqlMtg"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Meeting → Sit %</div><div class="chart-container"><canvas id="chartConvMtgSit"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Sit → Close %</div><div class="chart-container"><canvas id="chartConvSitClose"></canvas></div></div>
+    </div>
+    <div class="charts-grid">
       <div class="chart-card"><div class="chart-title" id="srcMqlsTitle">MQLs by Source</div><div class="chart-container"><canvas id="srcMqls"></canvas></div></div>
       <div class="chart-card"><div class="chart-title" id="srcSqlsTitle">SQLs by Source</div><div class="chart-container"><canvas id="srcSqls"></canvas></div></div>
       <div class="chart-card"><div class="chart-title" id="srcSitsTitle">Sits by Source</div><div class="chart-container"><canvas id="srcSits"></canvas></div></div>
@@ -358,6 +364,11 @@ function renderTrend(){
   const data=periods.map(p=>calcMetrics(p)),labels=periods.map(formatShort);
   [{id:'chartMqls',key:'mqls',c:'#22d3a7'},{id:'chartSqls',key:'sqls',c:'#3b82f6'},{id:'chartMtgs',key:'mtgs',c:'#f59e0b'},{id:'chartSits',key:'sits',c:'#a855f7'},{id:'chartClosesCreated',key:'closesCreated',c:'#ec4899'},{id:'chartClosesDeal',key:'closesDeal',c:'#f43f5e'}]
     .forEach(cfg=>makeBar(cfg.id,labels,data.map(d=>d[cfg.key]),cfg.c,false));
+  // Conversion rate charts
+  makeBar('chartConvMqlSql',labels,data.map(d=>d.mqls>0?Math.round(d.sqls/d.mqls*100):0),'#22d3a7',false,true);
+  makeBar('chartConvSqlMtg',labels,data.map(d=>d.sqls>0?Math.round(d.mtgs/d.sqls*100):0),'#3b82f6',false,true);
+  makeBar('chartConvMtgSit',labels,data.map(d=>d.mtgs>0?Math.round(d.sits/d.mtgs*100):0),'#f59e0b',false,true);
+  makeBar('chartConvSitClose',labels,data.map(d=>d.sits>0?Math.round(d.closesDeal/d.sits*100):0),'#f43f5e',false,true);
   // Source distribution - stacked column charts for MQLs and SQLs
   const mqlDS=calcMetricsBySource(periods,'mqls');
   makeStacked('srcMqls',labels,mqlDS,false);
